@@ -15,8 +15,8 @@
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
-    <class path="..\..\..\Games Resources\Skyrim\Schlangster SkyUI src\SWF objects\CLIK" />
-    <class path="..\..\..\Games Resources\Skyrim\Schlangster SkyUI src\SWF objects\Common" />
+    <class path="..\..\..\..\..\Games Resources\Skyrim\Schlangster SkyUI src\SWF objects\CLIK" />
+    <class path="..\..\..\..\..\Games Resources\Skyrim\Schlangster SkyUI src\SWF objects\Common" />
   </classpaths>
   <!-- Build options -->
   <build>
