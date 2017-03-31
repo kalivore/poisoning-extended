@@ -31,7 +31,7 @@ class PoisonMonitor
 		}
 		
 		this.constructTextFormat();
-		this.constructDoseCount();
+		this.constructPoisonData();
 		
 		if (_list.selectedEntry != null)
 		{
@@ -74,7 +74,7 @@ class PoisonMonitor
 	public function onTabPress(event: Object): Void
 	{
 		var index = event.index;
-		skse.Log("Now showing tab " + index);
+		//skse.Log("Now showing tab " + index);
 		skse.SendModEvent("bp_tabChange", "", index);
 	}
 	
@@ -89,7 +89,7 @@ class PoisonMonitor
 		if (isWeapon && _list.selectedEntry.isEquipped && _poisonInst._currentframe == "2")
 		{
 			if (!_poisonData) {
-				this.constructDoseCount();	
+				this.constructPoisonData();	
 			}
 			//skse.Log("Selected weapon " + _list.selectedEntry.formId + ": " + _list.selectedEntry.text + ", in hand " + (_list.selectedEntry.equipState - 2))
 			skse.SendModEvent("bp_selectionChange", "weapon", (_list.selectedEntry.equipState - 2), _list.selectedEntry.formId);
@@ -105,7 +105,7 @@ class PoisonMonitor
 		_countFormat.size = 60;
 	}
 	
-	private function constructDoseCount() {
+	private function constructPoisonData() {
 		
 		if (!_poisonInst) {
 			_poisonInst = _itemCard.PoisonInstance;
@@ -116,7 +116,7 @@ class PoisonMonitor
 		_poisonData.textAutoSize = "shrink";
 		_poisonData.verticalAlign = "center";
 		//_poisonData.background = true;
-		_poisonData.backgroundColor = 0xf984de;
+		//_poisonData.backgroundColor = 0xf984de;
 		_poisonData._visible = false;
 	}
 }
