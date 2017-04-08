@@ -113,14 +113,14 @@ Event OnGameReload()
 	_leftX = 90
 	_rightX = 850
 	parent.OnGameReload()
-	RegisterForModEvent("_BB_VisToggle", "OnVisToggle")
-	RegisterForModEvent("_BB_SetPoisonTextLeft", "OnSetPoisonTextLeft")
-	RegisterForModEvent("_BB_SetPoisonTextRight", "OnSetPoisonTextRight")
-	RegisterForModEvent("_BB_BumpPoisonUp", "OnBumpPoisonUp")
-	RegisterForModEvent("_BB_BumpPoisonDown", "OnBumpPoisonDown")
-	RegisterForModEvent("_BB_BumpPoisonLeft", "OnBumpPoisonLeft")
-	RegisterForModEvent("_BB_BumpPoisonRight", "OnBumpPoisonRight")
-	Debug.Trace("_BB_PoisonWidgets - OnGameReload (type '" + GetWidgetType() + "')")
+	RegisterForModEvent("_PSX_VisToggle", "OnVisToggle")
+	RegisterForModEvent("_PSX_SetPoisonTextLeft", "OnSetPoisonTextLeft")
+	RegisterForModEvent("_PSX_SetPoisonTextRight", "OnSetPoisonTextRight")
+	RegisterForModEvent("_PSX_BumpPoisonUp", "OnBumpPoisonUp")
+	RegisterForModEvent("_PSX_BumpPoisonDown", "OnBumpPoisonDown")
+	RegisterForModEvent("_PSX_BumpPoisonLeft", "OnBumpPoisonLeft")
+	RegisterForModEvent("_PSX_BumpPoisonRight", "OnBumpPoisonRight")
+	Debug.Trace("_PSX_PoisonWidgets - OnGameReload (type '" + GetWidgetType() + "')")
 	UpdateStatus()
 EndEvent
 
@@ -184,13 +184,12 @@ EndEvent
 ; @overrides SKI_WidgetBase
 string function GetWidgetSource()
 	return "poisoningextended/poisoninfo.swf"
-	;return "skyui/arrowcount.swf"
 endFunction
 
 ; @overrides SKI_WidgetBase
 string function GetWidgetType()
 	; Must be the same as scriptname
-	return "_BB_PoisonWidgets"
+	return "_PSX_PoisonWidgets"
 endFunction
 
 

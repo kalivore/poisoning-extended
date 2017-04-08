@@ -6,7 +6,7 @@ import _Q2C_Functions
 
 Perk Property _KLV_StashRefPerk  Auto
 
-Potion Property _BB_TestPoison  Auto
+Potion Property _PSX_TestPoison  Auto
 
 ObjectReference Property TargetRef Auto
 ObjectReference Property PlayerRef Auto
@@ -18,7 +18,6 @@ function OnInit()
 	RegisterForMenu("InventoryMenu")
 	RegisterForMenu("ContainerMenu")
 	RegisterForMenu("BarterMenu")
-	;RegisterForMenu("Crafting Menu")
 	
 	RegisterForModEvent("_KLV_ContainerActivated", "OnContainerActivated")
 	
@@ -43,15 +42,12 @@ function OnInit()
 
 	(PlayerRef as Actor).AddPerk(_KLV_StashRefPerk)
 
-	_BB_TestPoison.SetName("Test poison of having a totally long and fully unwieldy name...")
+	_PSX_TestPoison.SetName("Test poison of having a totally long and fully unwieldy name...")
 	
 endFunction
 
 
 event OnKeyDown(int aiKeyCode)
-
-int x1 = UI.GetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._x")
-int y1 = UI.GetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._y")
 
 	if (aiKeyCode == 26) ; [
 		Actor target = Game.GetCurrentCrosshairRef() as Actor
@@ -88,13 +84,13 @@ int y1 = UI.GetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonDa
 		WornPoisonStatus(target)
 	
 	elseif (aiKeyCode == 80) ; 2
-		SendModEvent("_BB_BumpPoisonDown")
+		SendModEvent("_PSX_BumpPoisonDown")
 	elseif (aiKeyCode == 75) ; 4
-		SendModEvent("_BB_BumpPoisonLeft")
+		SendModEvent("_PSX_BumpPoisonLeft")
 	elseif (aiKeyCode == 77) ; 6
-		SendModEvent("_BB_BumpPoisonRight")
+		SendModEvent("_PSX_BumpPoisonRight")
 	elseif (aiKeyCode == 72) ; 8
-		SendModEvent("_BB_BumpPoisonUp")
+		SendModEvent("_PSX_BumpPoisonUp")
 	
 	elseif (aiKeyCode == 40) ; '
 		;Potion poison = Game.GetFormFromFile(0x0003a5a4, "Skyrim.esm") as Potion ; weak damage health
@@ -103,8 +99,8 @@ int y1 = UI.GetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonDa
 		;Potion poison = Game.GetFormFromFile(0x00073f33, "Skyrim.esm") as Potion ; weak damage health
 		Potion poison = Game.GetFormFromFile(0x00073f34, "Skyrim.esm") as Potion ; deadly damage health
 		Game.GetPlayer().AddItem(poison, 1)
-		Game.GetPlayer().AddItem(_BB_TestPoison, 1)
-		;SendModEvent("_BB_VisToggle")
+		Game.GetPlayer().AddItem(_PSX_TestPoison, 1)
+		;SendModEvent("_PSX_VisToggle")
 	endIf
 
 endEvent
@@ -132,11 +128,11 @@ Function WornPoisonStatus(Actor target)
 		if (chargesLeft > 1)
 			poisonNameLeft += " (" + chargesLeft + ")"
 		endIf
-		SendModEvent("_BB_SetPoisonTextLeft", poisonNameLeft)
+		SendModEvent("_PSX_SetPoisonTextLeft", poisonNameLeft)
 		string itemLeft = WornObject.GetDisplayName(target, 0, 0)
 		msg = itemLeft + ": " + poisonNameLeft + " (" + currentPoisonLeft.GetFormId() + ")"
 	else
-		SendModEvent("_BB_SetPoisonTextLeft", "")
+		SendModEvent("_PSX_SetPoisonTextLeft", "")
 	endIf
 	
 	if (currentPoisonRight)
@@ -145,7 +141,7 @@ Function WornPoisonStatus(Actor target)
 		if (chargesRight > 1)
 			poisonNameRight += " (" + chargesRight + ")"
 		endIf
-		SendModEvent("_BB_SetPoisonTextRight", poisonNameRight)
+		SendModEvent("_PSX_SetPoisonTextRight", poisonNameRight)
 		string itemRight = WornObject.GetDisplayName(target, 1, 0)
 		if (msg)
 			msg += "; "
@@ -154,7 +150,7 @@ Function WornPoisonStatus(Actor target)
 		endIf
 		msg += itemRight + ": " + poisonNameRight + " (" + currentPoisonRight.GetFormId() + ")"
 	else
-		SendModEvent("_BB_SetPoisonTextRight", "")
+		SendModEvent("_PSX_SetPoisonTextRight", "")
 	endIf
 	
 	;Debug.Notification(msg)
@@ -298,33 +294,6 @@ event OnMenuOpen(string a_MenuName)
 	UI.InvokeStringA(a_MenuName, "_root.createEmptyMovieClip", counterArgs)
 	UI.InvokeString(a_MenuName, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
 	
-	;/
-	string path1 = "_root.Menu_mc.DoseCount.text"
-	string path2 = "_root.Menu_mc.poisonMonitorContainer.DoseCount.text"
-	string path3 = "_root.Menu_mc.PoisonMonitor.DoseCount.text"
-	string path4 = "_root.Menu_mc.poisonMonitorContainer.PoisonMonitor.DoseCount.text"
-	
-	string text1 = UI.GetString(currentMenu, path1)
-	string text2 = UI.GetString(currentMenu, path2)
-	string text3 = UI.GetString(currentMenu, path3)
-	string text4 = UI.GetString(currentMenu, path4)
-	
-	Debug.Trace("text1: " + text1)
-	Debug.Trace("text2: " + text2)
-	Debug.Trace("text3: " + text3)
-	Debug.Trace("text4: " + text4)
-	/;
-	
-	
-	;/
-	string[] containerArgs = new string[2]
-	containerArgs[0] = "itemSelectionMonitorContainer"
-	containerArgs[1] = "-16380"
-
-	UI.InvokeStringA(a_MenuName, "_root.createEmptyMovieClip", containerArgs)
-	UI.InvokeString(a_MenuName, "_root.itemSelectionMonitorContainer.loadMovie", "SelectedItemMonitor.swf")
-	/;
-	
 endEvent
 
 event OnMenuClose(string a_MenuName)
@@ -407,26 +376,3 @@ event OnContainerActivated(Form akTargetRef)
 	endIf
 	Debug.Trace(msg)
 endEvent
-
-
-Actor Function GetPlayerDialogueTarget()
-	Actor kPlayerDialogueTarget
-	Actor kPlayerRef = Game.GetPlayer()
-	Int iLoopCount = 10
-	While iLoopCount > 0
-		iLoopCount -= 1
-		kPlayerDialogueTarget = Game.FindRandomActorFromRef(kPlayerRef , 200.0)
-		If kPlayerDialogueTarget != kPlayerRef && kPlayerDialogueTarget.IsInDialogueWithPlayer() 
-			Return kPlayerDialogueTarget
-		EndIf
-	EndWhile
-	Return None
-EndFunction
-
-Int Function Round(Float i)
-	If (i - (i as Int)) < 0.5
-		Return (i as Int)
-	Else
-		Return (Math.Ceiling(i) as Int)
-	EndIf
-EndFunction
