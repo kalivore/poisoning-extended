@@ -4,7 +4,7 @@ string currentMenu
 
 import _Q2C_Functions
 
-Perk Property _BB_StashRefPerk  Auto
+Perk Property _KLV_StashRefPerk  Auto
 
 Potion Property _BB_TestPoison  Auto
 
@@ -41,7 +41,7 @@ function OnInit()
 	
 	RegisterForKey(40) ; '
 
-	(PlayerRef as Actor).AddPerk(_BB_StashRefPerk)
+	(PlayerRef as Actor).AddPerk(_KLV_StashRefPerk)
 
 	_BB_TestPoison.SetName("Test poison of having a totally long and fully unwieldy name...")
 	
@@ -88,18 +88,23 @@ int y1 = UI.GetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonDa
 		WornPoisonStatus(target)
 	
 	elseif (aiKeyCode == 80) ; 2
-		UI.SetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._y", y1 - 5)
+		SendModEvent("_BB_BumpPoisonDown")
 	elseif (aiKeyCode == 75) ; 4
-		UI.SetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._x", x1 - 5)
+		SendModEvent("_BB_BumpPoisonLeft")
 	elseif (aiKeyCode == 77) ; 6
-		UI.SetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._x", x1 + 5)
+		SendModEvent("_BB_BumpPoisonRight")
 	elseif (aiKeyCode == 72) ; 8
-		UI.SetInt(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData._y", y1 + 5)
+		SendModEvent("_BB_BumpPoisonUp")
 	
 	elseif (aiKeyCode == 40) ; '
-		Game.GetPlayer().AddItem(_BB_TestPoison, 1)
-		Potion poison = Game.GetFormFromFile(0x0003a5a4, "Skyrim.esm") as Potion ; weak damage health
+		;Potion poison = Game.GetFormFromFile(0x0003a5a4, "Skyrim.esm") as Potion ; weak damage health
+		;Potion poison = Game.GetFormFromFile(0x00073f31, "Skyrim.esm") as Potion ; weak damage health
+		;Potion poison = Game.GetFormFromFile(0x00073f32, "Skyrim.esm") as Potion ; weak damage health
+		;Potion poison = Game.GetFormFromFile(0x00073f33, "Skyrim.esm") as Potion ; weak damage health
+		Potion poison = Game.GetFormFromFile(0x00073f34, "Skyrim.esm") as Potion ; deadly damage health
 		Game.GetPlayer().AddItem(poison, 1)
+		Game.GetPlayer().AddItem(_BB_TestPoison, 1)
+		;SendModEvent("_BB_VisToggle")
 	endIf
 
 endEvent
@@ -113,14 +118,46 @@ Function WornPoisonStatus(Actor target)
 		return
 	endIf
 	
-	Potion currentPoison = WornGetPoison(target, 1)
-	string msg = WornObject.GetDisplayName(target, 1, 0)
-	if (!currentPoison)
-		msg += " is not poisoned"
+	Potion currentPoisonLeft = WornGetPoison(target, 0)
+	Potion currentPoisonRight = WornGetPoison(target, 1)
+	string poisonNameLeft = "Not poisoned"
+	string poisonNameRight = "Not poisoned"
+	int chargesLeft
+	int chargesRight
+	string msg
+	
+	if (currentPoisonLeft)
+		chargesLeft = WornGetPoisonCharges(target, 0)
+		poisonNameLeft = currentPoisonLeft.GetName()
+		if (chargesLeft > 1)
+			poisonNameLeft += " (" + chargesLeft + ")"
+		endIf
+		SendModEvent("_BB_SetPoisonTextLeft", poisonNameLeft)
+		string itemLeft = WornObject.GetDisplayName(target, 0, 0)
+		msg = itemLeft + ": " + poisonNameLeft + " (" + currentPoisonLeft.GetFormId() + ")"
 	else
-		msg += " poisoned with " + currentPoison.GetName() + " (" + currentPoison.GetFormId() + "), has " + WornGetPoisonCharges(target, 1) + " charges"
+		SendModEvent("_BB_SetPoisonTextLeft", "")
 	endIf
-	Debug.Notification(msg)
+	
+	if (currentPoisonRight)
+		chargesRight = WornGetPoisonCharges(target, 1)
+		poisonNameRight = currentPoisonRight.GetName()
+		if (chargesRight > 1)
+			poisonNameRight += " (" + chargesRight + ")"
+		endIf
+		SendModEvent("_BB_SetPoisonTextRight", poisonNameRight)
+		string itemRight = WornObject.GetDisplayName(target, 1, 0)
+		if (msg)
+			msg += "; "
+		else
+			msg = ""
+		endIf
+		msg += itemRight + ": " + poisonNameRight + " (" + currentPoisonRight.GetFormId() + ")"
+	else
+		SendModEvent("_BB_SetPoisonTextRight", "")
+	endIf
+	
+	;Debug.Notification(msg)
 	Debug.Trace(msg)
 	
 endFunction
@@ -296,6 +333,7 @@ event OnMenuClose(string a_MenuName)
 	currentMenu = ""
 	TargetRef = None
 	Debug.Trace("Closed " + a_MenuName)
+	WornPoisonStatus(Game.GetPlayer())
 endEvent
 
 event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
