@@ -1,4 +1,4 @@
-Scriptname _BB_PoisonTesting extends Quest  
+Scriptname _PSX_QuestScript extends Quest  
 
 string currentMenu
 

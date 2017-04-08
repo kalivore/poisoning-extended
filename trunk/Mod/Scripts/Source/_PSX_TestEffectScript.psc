@@ -1,4 +1,4 @@
-Scriptname _BB_TestEffectScript extends ActiveMagicEffect  
+Scriptname _PSX_TestEffectScript extends ActiveMagicEffect  
 
 Keyword Property MagicAlchHarmful Auto
 Keyword Property VendorItemPoison Auto
