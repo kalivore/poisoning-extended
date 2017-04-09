@@ -75,7 +75,7 @@ class PoisonMonitor
 	{
 		var index = event.index;
 		//skse.Log("Now showing tab " + index);
-		skse.SendModEvent("bp_tabChange", "", index);
+		skse.SendModEvent("_psx_tabChange", "", index);
 	}
 	
 	public function updateSelected(source:String)
@@ -92,7 +92,7 @@ class PoisonMonitor
 				this.constructPoisonData();	
 			}
 			//skse.Log("Selected weapon " + _list.selectedEntry.formId + ": " + _list.selectedEntry.text + ", in hand " + (_list.selectedEntry.equipState - 2))
-			skse.SendModEvent("bp_selectionChange", "weapon", (_list.selectedEntry.equipState - 2), _list.selectedEntry.formId);
+			skse.SendModEvent("_psx_selectionChange", "weapon", (_list.selectedEntry.equipState - 2), _list.selectedEntry.formId);
 			_poisonData._visible = true;
 			return;
 		}
