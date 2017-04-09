@@ -9,15 +9,19 @@ Perk Property _KLV_StashRefPerk  Auto
 Potion Property _PSX_TestPoison  Auto
 
 ObjectReference Property TargetRef Auto
-ObjectReference Property PlayerRef Auto
+Actor Property PlayerRef Auto
 
 Actor Property WornObjectSubject Auto
 
 
-function OnInit()
+event OnInit()
+	Maintenance()
+endEvent
+
+function Maintenance()
+
 	RegisterForMenu("InventoryMenu")
 	RegisterForMenu("ContainerMenu")
-	RegisterForMenu("BarterMenu")
 	
 	RegisterForModEvent("_KLV_ContainerActivated", "OnContainerActivated")
 	
@@ -33,10 +37,12 @@ function OnInit()
 	RegisterForKey(78) ; +
 	RegisterForKey(156) ; Num Ent
 	
+	;/
 	RegisterForKey(80) ; 2
 	RegisterForKey(75) ; 4
 	RegisterForKey(77) ; 6
 	RegisterForKey(72) ; 8
+	/;
 	
 	RegisterForKey(40) ; '
 
@@ -67,22 +73,18 @@ event OnKeyDown(int aiKeyCode)
 		WornPoisonStatus(target)
 	
 	elseif (aiKeyCode == 181) ; /
-		Actor target = Game.GetPlayer()
 		Potion poison = Game.GetFormFromFile(0x0003eb3e, "Skyrim.esm") as Potion ; invisibility
-		WornPoisonObject(target, poison)
+		WornPoisonObject(playerRef, poison)
 	elseif (aiKeyCode == 55) ; *
-		Actor target = Game.GetPlayer()
-		WornUnpoisonObject(target)
+		WornUnpoisonObject(playerRef)
 	elseif (aiKeyCode == 74) ; -
-		Actor target = Game.GetPlayer()
-		WornDecreasePoisonCharges(target)
+		WornDecreasePoisonCharges(playerRef)
 	elseif (aiKeyCode == 78) ; +
-		Actor target = Game.GetPlayer()
-		WornIncreasePoisonCharges(target)
+		WornIncreasePoisonCharges(playerRef)
 	elseif (aiKeyCode == 156) ; Num Ent
-		Actor target = Game.GetPlayer()
-		WornPoisonStatus(target)
+		WornPoisonStatus(playerRef)
 	
+	;/
 	elseif (aiKeyCode == 80) ; 2
 		SendModEvent("_PSX_BumpPoisonDown")
 	elseif (aiKeyCode == 75) ; 4
@@ -91,6 +93,12 @@ event OnKeyDown(int aiKeyCode)
 		SendModEvent("_PSX_BumpPoisonRight")
 	elseif (aiKeyCode == 72) ; 8
 		SendModEvent("_PSX_BumpPoisonUp")
+	/;
+	
+	elseif (aiKeyCode == 48) ; B
+		DirectPoison(0)
+	elseif (aiKeyCode == 49) ; N
+		DirectPoison(1)
 	
 	elseif (aiKeyCode == 40) ; '
 		;Potion poison = Game.GetFormFromFile(0x0003a5a4, "Skyrim.esm") as Potion ; weak damage health
@@ -98,13 +106,63 @@ event OnKeyDown(int aiKeyCode)
 		;Potion poison = Game.GetFormFromFile(0x00073f32, "Skyrim.esm") as Potion ; weak damage health
 		;Potion poison = Game.GetFormFromFile(0x00073f33, "Skyrim.esm") as Potion ; weak damage health
 		Potion poison = Game.GetFormFromFile(0x00073f34, "Skyrim.esm") as Potion ; deadly damage health
-		Game.GetPlayer().AddItem(poison, 1)
-		Game.GetPlayer().AddItem(_PSX_TestPoison, 1)
+		playerRef.AddItem(poison, 1)
+		playerRef.AddItem(_PSX_TestPoison, 1)
 		;SendModEvent("_PSX_VisToggle")
 	endIf
 
 endEvent
 
+
+
+Function UpdatePoisonWidgets()
+
+	Potion currentPoisonLeft = WornGetPoison(playerRef, 0)
+	Potion currentPoisonRight = WornGetPoison(playerRef, 1)
+	
+	if (!currentPoisonLeft)
+		SendModEvent("_PSX_SetPoisonTextLeft", "")
+	else
+		string poisonNameLeft = currentPoisonLeft.GetName()
+		int chargesLeft = WornGetPoisonCharges(playerRef, 0)
+		if (chargesLeft > 1)
+			poisonNameLeft += " (" + chargesLeft + ")"
+		endIf
+		SendModEvent("_PSX_SetPoisonTextLeft", poisonNameLeft)
+	endIf
+	
+	if (!currentPoisonRight)
+		SendModEvent("_PSX_SetPoisonTextRight", "")
+	else
+		string poisonNameRight = currentPoisonRight.GetName()
+		int chargesRight = WornGetPoisonCharges(playerRef, 1)
+		if (chargesRight > 1)
+			poisonNameRight += " (" + chargesRight + ")"
+		endIf
+		SendModEvent("_PSX_SetPoisonTextRight", poisonNameRight)
+	endIf
+	
+endFunction
+
+
+Function DirectPoison(int aiHand)
+
+	if (!WornObjectSubject || currentMenu == "")
+		Debug.Notification("Not a person's inventory")
+		return
+	endIf
+
+	int poisonId = UI.GetInt(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.formId")
+	Potion poison = Game.GetForm(poisonId) as Potion
+	if (!poison)
+		Debug.Notification("Not a poison")
+		return
+	endIf
+	
+	WornPoisonObject(WornObjectSubject, poison, aiHand)
+	Debug.Notification("Poison " + poison.GetName() + " applied to hand " + aiHand + " of " + WornObjectSubject.GetLeveledActorBase().GetName())
+	
+endFunction
 
 
 Function WornPoisonStatus(Actor target)
@@ -114,80 +172,63 @@ Function WornPoisonStatus(Actor target)
 		return
 	endIf
 	
-	Potion currentPoisonLeft = WornGetPoison(target, 0)
-	Potion currentPoisonRight = WornGetPoison(target, 1)
 	string poisonNameLeft = "Not poisoned"
 	string poisonNameRight = "Not poisoned"
-	int chargesLeft
-	int chargesRight
-	string msg
+	Potion currentPoisonLeft = WornGetPoison(target, 0)
+	Potion currentPoisonRight = WornGetPoison(target, 1)
 	
 	if (currentPoisonLeft)
-		chargesLeft = WornGetPoisonCharges(target, 0)
-		poisonNameLeft = currentPoisonLeft.GetName()
+		poisonNameLeft = currentPoisonLeft.GetName() + " (" + currentPoisonLeft.GetFormId() + ")"
+		int chargesLeft = WornGetPoisonCharges(target, 0)
 		if (chargesLeft > 1)
-			poisonNameLeft += " (" + chargesLeft + ")"
+			poisonNameLeft += ", " + chargesLeft
 		endIf
-		SendModEvent("_PSX_SetPoisonTextLeft", poisonNameLeft)
-		string itemLeft = WornObject.GetDisplayName(target, 0, 0)
-		msg = itemLeft + ": " + poisonNameLeft + " (" + currentPoisonLeft.GetFormId() + ")"
-	else
-		SendModEvent("_PSX_SetPoisonTextLeft", "")
 	endIf
+	string msg = WornObject.GetDisplayName(target, 0, 0) + ": " + poisonNameLeft
 	
 	if (currentPoisonRight)
-		chargesRight = WornGetPoisonCharges(target, 1)
-		poisonNameRight = currentPoisonRight.GetName()
+		poisonNameRight = currentPoisonRight.GetName() + " (" + currentPoisonRight.GetFormId() + ")"
+		int chargesRight = WornGetPoisonCharges(target, 1)
 		if (chargesRight > 1)
-			poisonNameRight += " (" + chargesRight + ")"
+			poisonNameRight += ", " + chargesRight
 		endIf
-		SendModEvent("_PSX_SetPoisonTextRight", poisonNameRight)
-		string itemRight = WornObject.GetDisplayName(target, 1, 0)
-		if (msg)
-			msg += "; "
-		else
-			msg = ""
-		endIf
-		msg += itemRight + ": " + poisonNameRight + " (" + currentPoisonRight.GetFormId() + ")"
-	else
-		SendModEvent("_PSX_SetPoisonTextRight", "")
 	endIf
+	msg += "; " + WornObject.GetDisplayName(target, 1, 0) + ": " + poisonNameLeft
 	
 	;Debug.Notification(msg)
 	Debug.Trace(msg)
 	
 endFunction
 
-
-Function WornIncreasePoisonCharges(Actor target)
+Function WornIncreasePoisonCharges(Actor target, int aiHandSlot = 1)
 
 	if (!target)
 		Debug.Notification("invalid target")
 		return
 	endIf
 	
-	string msg = WornObject.GetDisplayName(target, 1, 0)
-	int initialCharges = WornGetPoisonCharges(target, 1)
+	string msg = WornObject.GetDisplayName(target, aiHandSlot, 0)
+	int initialCharges = WornGetPoisonCharges(target, aiHandSlot)
 	if (initialCharges < 0)
 		msg += " is not poisoned"
 		Debug.Notification(msg)
 	else
 		int newCharges = initialCharges + 1
-		WornSetPoisonCharges(target, 1, newCharges)
-		msg += " had " + initialCharges + ", now has " + WornGetPoisonCharges(target, 1)
+		WornSetPoisonCharges(target, aiHandSlot, newCharges)
+		msg += " had " + initialCharges + ", now has " + WornGetPoisonCharges(target, aiHandSlot)
 	endIf
 	Debug.Trace(msg)
 endFunction
 
-Function WornDecreasePoisonCharges(Actor target)
+Function WornDecreasePoisonCharges(Actor target, int aiHandSlot = 1)
 
 	if (!target)
 		Debug.Notification("invalid target")
 		return
 	endIf
 	
-	string msg = WornObject.GetDisplayName(target, 1, 0)
-	int initialCharges = WornGetPoisonCharges(target, 1)
+	string msg = WornObject.GetDisplayName(target, aiHandSlot, 0)
+	int initialCharges = WornGetPoisonCharges(target, aiHandSlot)
 	if (initialCharges < 0)
 		msg += " is not poisoned"
 		Debug.Notification(msg)
@@ -196,13 +237,13 @@ Function WornDecreasePoisonCharges(Actor target)
 		if (newCharges < 0)
 			newCharges = 0
 		endIf
-		WornSetPoisonCharges(target, 1, newCharges)
-		msg += " had " + initialCharges + ", now has " + WornGetPoisonCharges(target, 1)
+		WornSetPoisonCharges(target, aiHandSlot, newCharges)
+		msg += " had " + initialCharges + ", now has " + WornGetPoisonCharges(target, aiHandSlot)
 	endIf
 	Debug.Trace(msg)
 endFunction
 
-Function WornPoisonObject(Actor target, Potion poison)
+Function WornPoisonObject(Actor target, Potion poison, int aiHandSlot = 1)
 
 	if (!target)
 		Debug.Notification("invalid target")
@@ -213,7 +254,7 @@ Function WornPoisonObject(Actor target, Potion poison)
 		Debug.Notification("can't find poison")
 		return
 	endIf
-	int ret = WornSetPoison(target, 1, poison, 1)
+	int ret = WornSetPoison(target, aiHandSlot, poison, 1)
 	if (ret < 0)
 		Debug.Notification("can't poison target")
 	else
@@ -222,14 +263,14 @@ Function WornPoisonObject(Actor target, Potion poison)
 
 endFunction
 
-Function WornUnpoisonObject(Actor target)
+Function WornUnpoisonObject(Actor target, int aiHandSlot = 1)
 
 	if (!target)
 		Debug.Notification("invalid target")
 		return
 	endIf
 	
-	Potion removedPoison = WornObjectRemovePoison(target, 1, 0)
+	Potion removedPoison = WornObjectRemovePoison(target, aiHandSlot, 0)
 	
 	string msg = "Attempting to un-poison: "
 	
@@ -237,8 +278,8 @@ Function WornUnpoisonObject(Actor target)
 		msg += "failed"
 	else
 		msg += "successful - got back " + removedPoison.GetName() + " (" + removedPoison.GetFormId() + ")"
-		Game.GetPlayer().AddItem(removedPoison, 1, true)
-		Game.GetPlayer().RemoveItem(removedPoison, 1, true, target)
+		playerRef.AddItem(removedPoison, 1, true)
+		playerRef.RemoveItem(removedPoison, 1, true, target)
 	endIf
 	
 	Debug.Notification(msg)
@@ -252,7 +293,7 @@ event OnMenuOpen(string a_MenuName)
 	RegisterForModEvent("bp_selectionChange", "OnItemSelectionChange")
 	RegisterForModEvent("bp_tabChange", "OnTabChange")
 	currentMenu = a_MenuName
-	string msg = "Opened " + a_MenuName
+	string msg = "Opened " + currentMenu
 
 	if (currentMenu == "InventoryMenu")
 		WornObjectSubject = PlayerRef as Actor
@@ -291,18 +332,23 @@ event OnMenuOpen(string a_MenuName)
 	counterArgs[0] = "poisonMonitorContainer"
 	counterArgs[1] = "5"
 
-	UI.InvokeStringA(a_MenuName, "_root.createEmptyMovieClip", counterArgs)
-	UI.InvokeString(a_MenuName, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
+	UI.InvokeStringA(currentMenu, "_root.createEmptyMovieClip", counterArgs)
+	UI.InvokeString(currentMenu, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
+	
+	RegisterForKey(48) ; B - direct RH poison
+	RegisterForKey(49) ; N - direct RH poison
 	
 endEvent
 
 event OnMenuClose(string a_MenuName)
 	UnregisterForModEvent("bp_selectionChange")
 	UnregisterForModEvent("bp_tabChange")
+	UnregisterForKey(48) ; B - direct RH poison
+	UnregisterForKey(49) ; N - direct RH poison
 	currentMenu = ""
 	TargetRef = None
 	Debug.Trace("Closed " + a_MenuName)
-	WornPoisonStatus(Game.GetPlayer())
+	UpdatePoisonWidgets()
 endEvent
 
 event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
@@ -314,6 +360,10 @@ event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg,
 	
 	;Debug.Trace("Selected " + akSender + ", type " + asStrArg + ", slot " + afNumArg)
 
+	if (!WornObjectSubject)
+		return
+	endIf
+	
 	if (asStrArg != "weapon")
 		return
 	endIf
@@ -321,10 +371,6 @@ event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg,
 	;bows are afNumArg 2
 	if (afNumArg == 2)
 		afNumArg = 1
-	endIf
-	
-	if (!WornObjectSubject)
-		return
 	endIf
 	
 	int currentCharges = WornObjectGetPoisonCharges(WornObjectSubject, afNumArg as int, 0)
