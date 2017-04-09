@@ -6,6 +6,7 @@ import _Q2C_Functions
 
 Perk Property _KLV_StashRefPerk  Auto
 Sound Property _PSX_PoisonUse Auto
+Sound Property _PSX_PoisonRemove  Auto  
 
 Potion Property _PSX_TestPoison  Auto
 
@@ -102,7 +103,7 @@ event OnMenuOpen(string a_MenuName)
 		msg += " (of nothing)"
 	endIf
 	Debug.Trace(msg)
-	Debug.Notification(msg)
+	;Debug.Notification(msg)
 	
 	string[] counterArgs = new string[2]
 	counterArgs[0] = "poisonMonitorContainer"
@@ -116,16 +117,36 @@ event OnMenuOpen(string a_MenuName)
 	
 endEvent
 
-event OnMenuClose(string a_MenuName)
-	UnregisterForModEvent("_psx_selectionChange")
-	UnregisterForModEvent("_psx_tabChange")
-	UnregisterForKey(48) ; B - direct RH poison
-	UnregisterForKey(49) ; N - direct RH poison
-	currentMenu = ""
-	TargetRef = None
-	currentEquipSlot = -1
-	Debug.Trace("Closed " + a_MenuName)
-	UpdatePoisonWidgets()
+event OnContainerActivated(Form akTargetRef)
+	string msg
+	TargetRef = akTargetRef as ObjectReference
+	if (TargetRef)
+		Actor isActor = TargetRef as Actor
+		if (isActor)
+			msg = "TargetRef set to " + isActor.GetLeveledActorBase().GetName()
+		else
+			msg = "TargetRef set to " + TargetRef.GetBaseObject().GetName()
+		endIf
+	else
+		msg = "Could not set TargetRef"
+		Debug.Notification(msg)
+	endIf
+	Debug.Trace(msg)
+endEvent
+
+event OnTabChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
+	string msg = "Showing tab " + afNumArg
+	if (afNumArg == 1)
+		WornObjectSubject = PlayerRef as Actor
+	else
+		WornObjectSubject = TargetRef as Actor
+	endIf
+	if (WornObjectSubject)
+		msg += " (" + WornObjectSubject.GetLeveledActorBase().GetName() + ")"
+	elseIf(TargetRef)
+		msg += " (" + TargetRef.GetBaseObject().GetName() + ")"
+	endIf
+	Debug.Trace(msg)
 endEvent
 
 event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
@@ -159,36 +180,16 @@ event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg,
 
 endEvent
 
-event OnTabChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
-	string msg = "Showing tab " + afNumArg
-	if (afNumArg == 1)
-		WornObjectSubject = PlayerRef as Actor
-	else
-		WornObjectSubject = TargetRef as Actor
-	endIf
-	if (WornObjectSubject)
-		msg += " (" + WornObjectSubject.GetLeveledActorBase().GetName() + ")"
-	elseIf(TargetRef)
-		msg += " (" + TargetRef.GetBaseObject().GetName() + ")"
-	endIf
-	Debug.Trace(msg)
-endEvent
-
-event OnContainerActivated(Form akTargetRef)
-	string msg
-	TargetRef = akTargetRef as ObjectReference
-	if (TargetRef)
-		Actor isActor = TargetRef as Actor
-		if (isActor)
-			msg = "TargetRef set to " + isActor.GetLeveledActorBase().GetName()
-		else
-			msg = "TargetRef set to " + TargetRef.GetBaseObject().GetName()
-		endIf
-	else
-		msg = "Could not set TargetRef"
-		Debug.Notification(msg)
-	endIf
-	Debug.Trace(msg)
+event OnMenuClose(string a_MenuName)
+	UnregisterForModEvent("_psx_selectionChange")
+	UnregisterForModEvent("_psx_tabChange")
+	UnregisterForKey(48) ; B - direct RH poison
+	UnregisterForKey(49) ; N - direct RH poison
+	currentMenu = ""
+	TargetRef = None
+	currentEquipSlot = -1
+	Debug.Trace("Closed " + a_MenuName)
+	UpdatePoisonWidgets()
 endEvent
 
 
@@ -239,24 +240,30 @@ Function DirectPoison(Potion akPoison, int aiHand)
 	
 	string msg = WornObjectSubject.GetLeveledActorBase().GetName() + "'s " + actorWeapon.GetName() + " has " + chargesToSet + " of " + akPoison.GetName()
 	Debug.Trace(msg)
-	Debug.Notification(msg)
 	
 endFunction
 
 Function RemovePoison(Weapon akWeapon)
 
+	; think I need a better way than currentEquipSlot..
 	Potion currentPoison = WornGetPoison(WornObjectSubject, currentEquipSlot)
 	if (!currentPoison)
-		Debug.Notification("Weapon not poisoned")
+		Debug.Notification("Weapon in slot " + currentEquipSlot + " not poisoned")
 		return
 	endIf
 	
 	int currentCharges = WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
 	WornRemovePoison(WornObjectSubject, currentEquipSlot)
 	
+	; need a better remove sound
+	_PSX_PoisonRemove.Play(playerRef)
+	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", "")
+	UI.InvokeBool(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", false)
+	; ought to remove little icon in main item list too if poss..
+	
+	
 	string msg = "Removed " + currentCharges + " of " + currentPoison.GetName() + " from " + WornObjectSubject.GetLeveledActorBase().GetName() + "'s " + akWeapon.GetName()
 	Debug.Trace(msg)
-	Debug.Notification(msg)
 	
 endFunction
 
