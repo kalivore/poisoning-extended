@@ -6,19 +6,17 @@ import _Q2C_Functions
 
 Perk Property _KLV_StashRefPerk  Auto
 Sound Property _PSX_PoisonUse Auto
-Sound Property _PSX_PoisonRemove  Auto  
-
-Potion Property _PSX_TestPoison  Auto
+Sound Property _PSX_PoisonRemove  Auto
+GlobalVariable Property _PSX_ChargesPerPoisonVial  Auto
+GlobalVariable Property _PSX_ChargeMultiplier  Auto
 
 ObjectReference Property TargetRef Auto
 Actor Property PlayerRef Auto
 
-int ChargesPerPoison = 1
-int ChargesRefundedPerPoison = 1
+Potion Property _PSX_TestPoison  Auto
 
 
 Actor WornObjectSubject
-int currentEquipSlot
 
 event OnInit()
 	Maintenance()
@@ -34,8 +32,6 @@ function Maintenance()
 	if (!PlayerRef.HasPerk(_KLV_StashRefPerk))
 		PlayerRef.AddPerk(_KLV_StashRefPerk)
 	endIf
-	
-	currentEquipSlot = -1
 	
 	; stuff for testing
 	RegisterForKey(40) ; '
@@ -64,6 +60,23 @@ event OnKeyDown(int aiKeyCode)
 
 endEvent
 
+event OnContainerActivated(Form akTargetRef)
+	string msg
+	TargetRef = akTargetRef as ObjectReference
+	if (TargetRef)
+		Actor isActor = TargetRef as Actor
+		if (isActor)
+			msg = "TargetRef set to " + isActor.GetLeveledActorBase().GetName()
+		else
+			msg = "TargetRef set to " + TargetRef.GetBaseObject().GetName()
+		endIf
+	else
+		msg = "Could not set TargetRef"
+		Debug.Notification(msg)
+	endIf
+	Debug.Trace(msg)
+endEvent
+
 event OnMenuOpen(string a_MenuName)
 
 	RegisterForModEvent("_psx_selectionChange", "OnItemSelectionChange")
@@ -85,7 +98,6 @@ event OnMenuOpen(string a_MenuName)
 			msg = "Can't find target - can't continue"
 			Debug.Trace(msg)
 			Debug.Notification(msg)
-			currentEquipSlot = -1
 			return
 		endIf
 		if (TargetRef.GetType() == 28)
@@ -117,23 +129,6 @@ event OnMenuOpen(string a_MenuName)
 	
 endEvent
 
-event OnContainerActivated(Form akTargetRef)
-	string msg
-	TargetRef = akTargetRef as ObjectReference
-	if (TargetRef)
-		Actor isActor = TargetRef as Actor
-		if (isActor)
-			msg = "TargetRef set to " + isActor.GetLeveledActorBase().GetName()
-		else
-			msg = "TargetRef set to " + TargetRef.GetBaseObject().GetName()
-		endIf
-	else
-		msg = "Could not set TargetRef"
-		Debug.Notification(msg)
-	endIf
-	Debug.Trace(msg)
-endEvent
-
 event OnTabChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
 	string msg = "Showing tab " + afNumArg
 	if (afNumArg == 1)
@@ -152,19 +147,17 @@ endEvent
 event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
 
 	if (!WornObjectSubject || asStrArg != "weapon")
-		currentEquipSlot = -1
 		return
 	endIf
 	
-	currentEquipSlot = afNumArg as int
+	int currentEquipSlot = afNumArg as int
 	if (currentEquipSlot == 2)
-		;bows are 2
+		; bows are UI state 2, but count as slot 1 for WornObject
 		currentEquipSlot = 1
 	endIf
 	
 	Potion currentPoison = WornGetPoison(WornObjectSubject, currentEquipSlot)
 	if (!currentPoison)
-		currentEquipSlot = -1
 		return
 	endIf
 	
@@ -183,11 +176,10 @@ endEvent
 event OnMenuClose(string a_MenuName)
 	UnregisterForModEvent("_psx_selectionChange")
 	UnregisterForModEvent("_psx_tabChange")
-	UnregisterForKey(48) ; B - direct RH poison
+	UnregisterForKey(48) ; B - direct LH poison
 	UnregisterForKey(49) ; N - direct RH poison
 	currentMenu = ""
 	TargetRef = None
-	currentEquipSlot = -1
 	Debug.Trace("Closed " + a_MenuName)
 	UpdatePoisonWidgets()
 endEvent
@@ -223,7 +215,7 @@ Function DirectPoison(Potion akPoison, int aiHand)
 	endIf
 	
 	Potion currentPoison = WornGetPoison(WornObjectSubject, aiHand)
-	int chargesToSet = ChargesPerPoison
+	int chargesToSet = (_PSX_ChargesPerPoisonVial.GetValue() as int) * (_PSX_ChargeMultiplier.GetValue() as int)
 	if (currentPoison)
 		if (currentPoison != akPoison)
 			Debug.Notification("The current weapon is already poisoned with " + currentPoison.GetName() + ". Remove this poison before using another.")
@@ -245,10 +237,20 @@ endFunction
 
 Function RemovePoison(Weapon akWeapon)
 
-	; think I need a better way than currentEquipSlot..
+	int currentEquipSlot = UI.GetInt(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.equipState")
+	if (currentEquipSlot < 2)
+		return
+	endIf
+	; vals are 2,3,4 for left/right/both - remove 2 to convert to SKSE's 0/1
+	currentEquipSlot -= 2
+	if (currentEquipSlot == 2)
+		; bows are UI state 2, but count as slot 1 for WornObject
+		currentEquipSlot = 1
+	endIf
+	
 	Potion currentPoison = WornGetPoison(WornObjectSubject, currentEquipSlot)
 	if (!currentPoison)
-		Debug.Notification("Weapon in slot " + currentEquipSlot + " not poisoned")
+		Debug.Notification("This weapon is not poisoned")
 		return
 	endIf
 	
@@ -259,8 +261,7 @@ Function RemovePoison(Weapon akWeapon)
 	_PSX_PoisonRemove.Play(playerRef)
 	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", "")
 	UI.InvokeBool(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", false)
-	; ought to remove little icon in main item list too if poss..
-	
+	UI.InvokeBool(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.poisonIcon.gotoAndStop", false)
 	
 	string msg = "Removed " + currentCharges + " of " + currentPoison.GetName() + " from " + WornObjectSubject.GetLeveledActorBase().GetName() + "'s " + akWeapon.GetName()
 	Debug.Trace(msg)

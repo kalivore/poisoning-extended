@@ -133,7 +133,7 @@ event OnWidgetReset()
 	UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonRightPosX", _rightX) 
 	
 	string msg = "OnWidgetReset - visible: " + _visible + ", text: " + _poisonTextLeft
-	Debug.Notification(msg)
+	;Debug.Notification(msg)
 	Debug.Trace(msg)
 endEvent
 
