@@ -11,13 +11,13 @@ event OnInit()
 	RegisterForAnimationEvent(PlayerRef, "weaponSwing")
 	RegisterForAnimationEvent(PlayerRef, "weaponLeftSwing")
 	RegisterForAnimationEvent(PlayerRef, "arrowRelease")
-	PSXQuest.Maintenance()
 endEvent
 
 event OnPlayerLoadGame()
 	RegisterForAnimationEvent(PlayerRef, "weaponSwing")
 	RegisterForAnimationEvent(PlayerRef, "weaponLeftSwing")
 	RegisterForAnimationEvent(PlayerRef, "arrowRelease")
+	PSXQuest.Update()
 endEvent
 
 Event OnAnimationEvent(ObjectReference aktarg, string EventName)

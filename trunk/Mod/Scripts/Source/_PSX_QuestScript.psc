@@ -1,28 +1,133 @@
 Scriptname _PSX_QuestScript extends Quest  
 
-string currentMenu
+float Property CurrentVersion = 0.0100 AutoReadonly
+float previousVersion
 
-import _Q2C_Functions
+string Property ModName = "Poisoning Extended" AutoReadonly
+string Property LogName = "PoisoningExtended" AutoReadonly
+
+
+GlobalVariable Property _PSX_DebugToFile Auto
+bool priDebugToFile
+bool Property DebugToFile
+	bool function get()
+		return priDebugToFile
+	endFunction
+	function set(bool val)
+		_PSX_DebugToFile.SetValue(val as int)
+		priDebugToFile = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_ChargesPerPoisonVial  Auto
+int priChargesPerPoisonVial
+int Property ChargesPerPoisonVial
+	int function get()
+		return priChargesPerPoisonVial
+	endFunction
+	function set(int val)
+		_PSX_ChargesPerPoisonVial.SetValue(val as int)
+		priChargesPerPoisonVial = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_ChargeMultiplier  Auto
+int priChargeMultiplier
+int Property ChargeMultiplier
+	int function get()
+		return priChargeMultiplier
+	endFunction
+	function set(int val)
+		_PSX_ChargeMultiplier.SetValue(val as int)
+		priChargeMultiplier = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_KeycodePoisonLeft  Auto
+int priKeycodePoisonLeft
+int Property KeycodePoisonLeft
+	int function get()
+		return priKeycodePoisonLeft
+	endFunction
+	function set(int val)
+		_PSX_KeycodePoisonLeft.SetValue(val as int)
+		priKeycodePoisonLeft = val
+	endFunction
+endProperty
+GlobalVariable Property _PSX_KeycodePoisonRght  Auto
+int priKeycodePoisonRght
+int Property KeycodePoisonRght
+	int function get()
+		return priKeycodePoisonRght
+	endFunction
+	function set(int val)
+		_PSX_KeycodePoisonRght.SetValue(val as int)
+		priKeycodePoisonRght = val
+	endFunction
+endProperty
+
 
 Perk Property _KLV_StashRefPerk  Auto
 Sound Property _PSX_PoisonUse Auto
 Sound Property _PSX_PoisonRemove  Auto
-GlobalVariable Property _PSX_ChargesPerPoisonVial  Auto
-GlobalVariable Property _PSX_ChargeMultiplier  Auto
 
 ObjectReference Property TargetRef Auto
 Actor Property PlayerRef Auto
 
-Potion Property _PSX_TestPoison  Auto
-
 
 Actor WornObjectSubject
+string currentMenu
+
+
 
 event OnInit()
-	Maintenance()
+
+	Update()
+
 endEvent
 
-function Maintenance()
+function Update()
+
+	; floating-point math is hard..  let's go shopping!
+	int iPreviousVersion = (PreviousVersion * 10000) as int
+	int iCurrentVersion = (CurrentVersion * 10000) as int
+	
+	if (iCurrentVersion != iPreviousVersion)
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; end version-specific updates
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		; notify current version
+		string msg = ModName
+		if (PreviousVersion > 0)
+			msg += " updated from v" + GetVersionAsString(PreviousVersion) + " to "
+		else
+			msg += " running "
+		endIf
+		msg += "v" + GetVersionAsString(CurrentVersion)
+		DebugStuff(msg, msg, true)
+
+		PreviousVersion = CurrentVersion
+	endIf
+
+	Maintenance()
+
+endFunction
+
+Function Maintenance()
+
+	Debug.OpenUserLog(LogName)
+
+	DebugToFile = true;_PSX_DebugToFile.GetValue() as bool
+	ChargesPerPoisonVial = _PSX_ChargesPerPoisonVial.GetValue() as int
+	ChargeMultiplier = _PSX_ChargeMultiplier.GetValue() as int
+	KeycodePoisonLeft = 49;_PSX_KeycodePoisonLeft.GetValue() as int
+	KeycodePoisonRght = 48;_PSX_KeycodePoisonRght.GetValue() as int
 
 	RegisterForMenu("InventoryMenu")
 	RegisterForMenu("ContainerMenu")
@@ -33,32 +138,8 @@ function Maintenance()
 		PlayerRef.AddPerk(_KLV_StashRefPerk)
 	endIf
 	
-	; stuff for testing
-	RegisterForKey(40) ; '
-	_PSX_TestPoison.SetName("Test poison of having a totally long and fully unwieldy name...")
-	
 endFunction
 
-
-event OnKeyDown(int aiKeyCode)
-
-	if (aiKeyCode == 48) ; B - direct LH poison
-		HandleInventoryHotkey(aiKeyCode)
-	
-	elseif (aiKeyCode == 49) ; N - direct RH poison
-		HandleInventoryHotkey(aiKeyCode)
-	
-	elseif (aiKeyCode == 40) ; '
-		;Potion poison = Game.GetFormFromFile(0x0003a5a4, "Skyrim.esm") as Potion ; weak damage health
-		;Potion poison = Game.GetFormFromFile(0x00073f31, "Skyrim.esm") as Potion ; weak damage health
-		;Potion poison = Game.GetFormFromFile(0x00073f32, "Skyrim.esm") as Potion ; weak damage health
-		;Potion poison = Game.GetFormFromFile(0x00073f33, "Skyrim.esm") as Potion ; weak damage health
-		Potion poison = Game.GetFormFromFile(0x00073f34, "Skyrim.esm") as Potion ; deadly damage health
-		playerRef.AddItem(poison, 1)
-		playerRef.AddItem(_PSX_TestPoison, 1)
-	endIf
-
-endEvent
 
 event OnContainerActivated(Form akTargetRef)
 	string msg
@@ -72,9 +153,9 @@ event OnContainerActivated(Form akTargetRef)
 		endIf
 	else
 		msg = "Could not set TargetRef"
-		Debug.Notification(msg)
+		DebugStuff(msg, msg, true)
 	endIf
-	Debug.Trace(msg)
+	DebugStuff(msg)
 endEvent
 
 event OnMenuOpen(string a_MenuName)
@@ -94,13 +175,14 @@ event OnMenuOpen(string a_MenuName)
 			Utility.WaitMenuMode(1)
 			i -= 1
 		endWhile
+		
 		if (!TargetRef)
 			msg = "Can't find target - can't continue"
-			Debug.Trace(msg)
-			Debug.Notification(msg)
+			DebugStuff(msg, msg, true)
 			return
 		endIf
-		if (TargetRef.GetType() == 28)
+		
+		if (TargetRef.GetType() == 28) ; Container is type 28
 			WornObjectSubject = None
 		else
 			WornObjectSubject = TargetRef as Actor
@@ -114,8 +196,7 @@ event OnMenuOpen(string a_MenuName)
 	else
 		msg += " (of nothing)"
 	endIf
-	Debug.Trace(msg)
-	;Debug.Notification(msg)
+	DebugStuff(msg)
 	
 	string[] counterArgs = new string[2]
 	counterArgs[0] = "poisonMonitorContainer"
@@ -124,8 +205,8 @@ event OnMenuOpen(string a_MenuName)
 	UI.InvokeStringA(currentMenu, "_root.createEmptyMovieClip", counterArgs)
 	UI.InvokeString(currentMenu, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
 	
-	RegisterForKey(48) ; B - direct LH poison or remove poison
-	RegisterForKey(49) ; N - direct RH poison
+	RegisterForKey(KeycodePoisonLeft) ; direct LH poison or remove poison
+	RegisterForKey(KeycodePoisonRght) ; direct RH poison
 	
 endEvent
 
@@ -141,7 +222,7 @@ event OnTabChange(string asEventName, string asStrArg, float afNumArg, Form akSe
 	elseIf(TargetRef)
 		msg += " (" + TargetRef.GetBaseObject().GetName() + ")"
 	endIf
-	Debug.Trace(msg)
+	DebugStuff(msg)
 endEvent
 
 event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg, Form akSender)
@@ -156,31 +237,38 @@ event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg,
 		currentEquipSlot = 1
 	endIf
 	
-	Potion currentPoison = WornGetPoison(WornObjectSubject, currentEquipSlot)
+	Potion currentPoison = _Q2C_Functions.WornGetPoison(WornObjectSubject, currentEquipSlot)
 	if (!currentPoison)
 		return
 	endIf
 	
 	string msg = currentPoison.GetName()
-	int currentCharges = WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
+	int currentCharges = _Q2C_Functions.WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
 	if (currentCharges > 1)
 		msg += " (" + currentCharges + ")"
 	endIf
 	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", msg)
 	
-	;string currName = UI.GetString(currentMenu, "_root.Menu_mc.itemCard.ItemName.text")
-	;Debug.Trace("Selected " + akSender + ", Item Card Name: " + currName + ", Charges on slot " + currentEquipSlot + ": " + currentCharges)
+endEvent
+
+event OnKeyDown(int aiKeyCode)
+
+	if (aiKeyCode == KeycodePoisonLeft)
+		HandleInventoryHotkey(aiKeyCode)
+	elseif (aiKeyCode == KeycodePoisonRght)
+		HandleInventoryHotkey(aiKeyCode)
+	endIf
 
 endEvent
 
 event OnMenuClose(string a_MenuName)
 	UnregisterForModEvent("_psx_selectionChange")
 	UnregisterForModEvent("_psx_tabChange")
-	UnregisterForKey(48) ; B - direct LH poison
-	UnregisterForKey(49) ; N - direct RH poison
+	UnregisterForKey(KeycodePoisonLeft)
+	UnregisterForKey(KeycodePoisonRght)
 	currentMenu = ""
 	TargetRef = None
-	Debug.Trace("Closed " + a_MenuName)
+	DebugStuff("Closed " + a_MenuName)
 	UpdatePoisonWidgets()
 endEvent
 
@@ -188,20 +276,23 @@ endEvent
 function HandleInventoryHotkey(int aiKeyCode)
 
 	if (!WornObjectSubject || currentMenu == "")
-		;Debug.Notification("Not a person's inventory")
+		;DebugStuff("Not a person's inventory", "Not a person's inventory")
 		return
 	endIf
 
 	int formId = UI.GetInt(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.formId")
 	Form invForm = Game.GetForm(formId)
 	if (invForm as Potion)
-		if (aiKeyCode == 48)
+		if (aiKeyCode == KeycodePoisonLeft)
 			DirectPoison(invForm as Potion, 0)
 		else
 			DirectPoison(invForm as Potion, 1)
 		endIf
 	elseIf (invForm as Weapon)
 		RemovePoison(invForm as Weapon)
+	else
+		Debug.Notification("Can't find game form " + formId)
+		Debug.Trace("Can't find game form " + formId)
 	endIf
 
 endFunction
@@ -210,28 +301,30 @@ Function DirectPoison(Potion akPoison, int aiHand)
 
 	Weapon actorWeapon = WornObjectSubject.GetEquippedWeapon(aiHand == 0)
 	if (!actorWeapon)
-		Debug.Notification("No weapon to poison in " + GetHandName(aiHand) + " hand")
+		string msg = "No weapon to poison in " + GetHandName(aiHand) + " hand"
+		DebugStuff(msg, msg)
 		return
 	endIf
 	
-	Potion currentPoison = WornGetPoison(WornObjectSubject, aiHand)
-	int chargesToSet = (_PSX_ChargesPerPoisonVial.GetValue() as int) * (_PSX_ChargeMultiplier.GetValue() as int)
+	Potion currentPoison = _Q2C_Functions.WornGetPoison(WornObjectSubject, aiHand)
+	int chargesToSet = ChargesPerPoisonVial * ChargeMultiplier
 	if (currentPoison)
 		if (currentPoison != akPoison)
-			Debug.Notification("The current weapon is already poisoned with " + currentPoison.GetName() + ". Remove this poison before using another.")
+			string msg = "The current weapon is already poisoned with " + currentPoison.GetName()
+			DebugStuff(msg, msg)
 			return
 		endIf
-		chargesToSet += WornGetPoisonCharges(WornObjectSubject, aiHand)
-		WornSetPoisonCharges(WornObjectSubject, aiHand, chargesToSet)
+		chargesToSet += _Q2C_Functions.WornGetPoisonCharges(WornObjectSubject, aiHand)
+		_Q2C_Functions.WornSetPoisonCharges(WornObjectSubject, aiHand, chargesToSet)
 	else
-		WornSetPoison(WornObjectSubject, aiHand, akPoison, chargesToSet)
+		_Q2C_Functions.WornSetPoison(WornObjectSubject, aiHand, akPoison, chargesToSet)
 	endIf
 	
 	WornObjectSubject.RemoveItem(akPoison, 1, true)
 	_PSX_PoisonUse.Play(playerRef)
 	
 	string msg = WornObjectSubject.GetLeveledActorBase().GetName() + "'s " + actorWeapon.GetName() + " has " + chargesToSet + " of " + akPoison.GetName()
-	Debug.Trace(msg)
+	DebugStuff(msg)
 	
 endFunction
 
@@ -248,36 +341,37 @@ Function RemovePoison(Weapon akWeapon)
 		currentEquipSlot = 1
 	endIf
 	
-	Potion currentPoison = WornGetPoison(WornObjectSubject, currentEquipSlot)
+	Potion currentPoison = _Q2C_Functions.WornGetPoison(WornObjectSubject, currentEquipSlot)
 	if (!currentPoison)
-		Debug.Notification("This weapon is not poisoned")
+		DebugStuff("This weapon is not poisoned", "This weapon is not poisoned")
 		return
 	endIf
 	
-	int currentCharges = WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
-	WornRemovePoison(WornObjectSubject, currentEquipSlot)
-	
-	; need a better remove sound
+	int currentCharges = _Q2C_Functions.WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
+	_Q2C_Functions.WornRemovePoison(WornObjectSubject, currentEquipSlot)
 	_PSX_PoisonRemove.Play(playerRef)
 	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", "")
-	UI.InvokeBool(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", false)
-	UI.InvokeBool(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.poisonIcon.gotoAndStop", false)
+	UI.InvokeString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", "Off")
+	; need a way to access current list entry
+	; "_root.Menu_mc.inventoryLists.panelContainer.itemList.ItemsListEntryXX.poisonIcon._height"
+	; or run InvalidateListData to rebuild everything
+	; UI.Invoke(currentMenu, "_root.Menu_mc.inventoryLists.InvalidateListData")
 	
 	string msg = "Removed " + currentCharges + " of " + currentPoison.GetName() + " from " + WornObjectSubject.GetLeveledActorBase().GetName() + "'s " + akWeapon.GetName()
-	Debug.Trace(msg)
+	DebugStuff(msg)
 	
 endFunction
 
 function UpdatePoisonWidgets()
 
-	Potion currentPoisonLeft = WornGetPoison(playerRef, 0)
-	Potion currentPoisonRight = WornGetPoison(playerRef, 1)
+	Potion currentPoisonLeft = _Q2C_Functions.WornGetPoison(playerRef, 0)
+	Potion currentPoisonRight = _Q2C_Functions.WornGetPoison(playerRef, 1)
 	
 	if (!currentPoisonLeft)
 		SendModEvent("_PSX_SetPoisonTextLeft", "")
 	else
 		string poisonNameLeft = currentPoisonLeft.GetName()
-		int chargesLeft = WornGetPoisonCharges(playerRef, 0)
+		int chargesLeft = _Q2C_Functions.WornGetPoisonCharges(playerRef, 0)
 		if (chargesLeft > 1)
 			poisonNameLeft += " (" + chargesLeft + ")"
 		endIf
@@ -288,7 +382,7 @@ function UpdatePoisonWidgets()
 		SendModEvent("_PSX_SetPoisonTextRight", "")
 	else
 		string poisonNameRight = currentPoisonRight.GetName()
-		int chargesRight = WornGetPoisonCharges(playerRef, 1)
+		int chargesRight = _Q2C_Functions.WornGetPoisonCharges(playerRef, 1)
 		if (chargesRight > 1)
 			poisonNameRight += " (" + chargesRight + ")"
 		endIf
@@ -305,4 +399,29 @@ string function GetHandName(int aiHand)
 		return "right"
 	endIf
 	return "unknown"
+endFunction
+
+string function GetVersionAsString(float afVersion)
+
+	string raw = afVersion as string
+	int dotPos = StringUtil.Find(raw, ".")
+	string major = StringUtil.SubString(raw, 0, dotPos)
+	string minor = StringUtil.SubString(raw, dotPos + 1, 2)
+	string revsn = StringUtil.SubString(raw, dotPos + 3, 2)
+	return major + "." + minor + "." + revsn
+
+endFunction
+
+function DebugStuff(string asLogMsg, string asScreenMsg = "", bool abPrefix = false)
+
+	if (DebugToFile)
+		Debug.TraceUser(LogName, asLogMsg)
+	endIf
+	if (asScreenMsg != "")
+		if (abPrefix)
+			asScreenMsg = ModName + " - " + asScreenMsg
+		endIf
+		Debug.Notification(asScreenMsg)
+	endIf
+
 endFunction
