@@ -6,22 +6,10 @@ float previousVersion
 string Property ModName = "Poisoning Extended" AutoReadonly
 string Property LogName = "PoisoningExtended" AutoReadonly
 
-int Property C_CONFIRM_NEVER = 0 AutoReadonly
-int Property C_CONFIRM_BENEF = 1 AutoReadonly
-int Property C_CONFIRM_TOPUP = 2 AutoReadonly
-int Property C_CONFIRM_ALWYS = 3 AutoReadonly
-
-GlobalVariable Property _PSX_DebugToFile Auto
-bool priDebugToFile
-bool Property DebugToFile
-	bool function get()
-		return priDebugToFile
-	endFunction
-	function set(bool val)
-		_PSX_DebugToFile.SetValue(val as int)
-		priDebugToFile = val
-	endFunction
-endProperty
+int Property C_CONFIRM_ALWAYS = 0 AutoReadonly
+int Property C_CONFIRM_NEWPOISON = 1 AutoReadonly
+int Property C_CONFIRM_BENEFICIAL = 2 AutoReadonly
+int Property C_CONFIRM_NEVER = 3 AutoReadonly
 
 GlobalVariable Property _PSX_ConfirmPoison Auto
 int priConfirmPoison
@@ -32,6 +20,30 @@ int Property ConfirmPoison
 	function set(int val)
 		_PSX_ConfirmPoison.SetValue(val as int)
 		priConfirmPoison = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_KeycodePoisonLeft  Auto
+int priKeycodePoisonLeft
+int Property KeycodePoisonLeft
+	int function get()
+		return priKeycodePoisonLeft
+	endFunction
+	function set(int val)
+		_PSX_KeycodePoisonLeft.SetValue(val as int)
+		priKeycodePoisonLeft = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_KeycodePoisonRght  Auto
+int priKeycodePoisonRght
+int Property KeycodePoisonRght
+	int function get()
+		return priKeycodePoisonRght
+	endFunction
+	function set(int val)
+		_PSX_KeycodePoisonRght.SetValue(val as int)
+		priKeycodePoisonRght = val
 	endFunction
 endProperty
 
@@ -59,27 +71,28 @@ int Property ChargeMultiplier
 	endFunction
 endProperty
 
-GlobalVariable Property _PSX_KeycodePoisonLeft  Auto
-int priKeycodePoisonLeft
-int Property KeycodePoisonLeft
-	int function get()
-		return priKeycodePoisonLeft
+GlobalVariable Property _PSX_ShowWidgets Auto
+bool priShowWidgets
+bool Property ShowWidgets
+	bool function get()
+		return priShowWidgets
 	endFunction
-	function set(int val)
-		_PSX_KeycodePoisonLeft.SetValue(val as int)
-		priKeycodePoisonLeft = val
+	function set(bool val)
+		_PSX_ShowWidgets.SetValue(val as int)
+		priShowWidgets = val
+		UpdatePoisonWidgets()
 	endFunction
 endProperty
 
-GlobalVariable Property _PSX_KeycodePoisonRght  Auto
-int priKeycodePoisonRght
-int Property KeycodePoisonRght
-	int function get()
-		return priKeycodePoisonRght
+GlobalVariable Property _PSX_DebugToFile Auto
+bool priDebugToFile
+bool Property DebugToFile
+	bool function get()
+		return priDebugToFile
 	endFunction
-	function set(int val)
-		_PSX_KeycodePoisonRght.SetValue(val as int)
-		priKeycodePoisonRght = val
+	function set(bool val)
+		_PSX_DebugToFile.SetValue(val as int)
+		priDebugToFile = val
 	endFunction
 endProperty
 
@@ -144,12 +157,13 @@ Function Maintenance()
 
 	Debug.OpenUserLog(LogName)
 
-	DebugToFile = true;_PSX_DebugToFile.GetValue() as bool
-	ConfirmPoison = 1;_PSX_ConfirmPoison.GetValue() as bool
+	ConfirmPoison = _PSX_ConfirmPoison.GetValue() as int
+	KeycodePoisonLeft = _PSX_KeycodePoisonLeft.GetValue() as int
+	KeycodePoisonRght = _PSX_KeycodePoisonRght.GetValue() as int
 	ChargesPerPoisonVial = _PSX_ChargesPerPoisonVial.GetValue() as int
 	ChargeMultiplier = _PSX_ChargeMultiplier.GetValue() as int
-	KeycodePoisonLeft = 49;_PSX_KeycodePoisonLeft.GetValue() as int
-	KeycodePoisonRght = 48;_PSX_KeycodePoisonRght.GetValue() as int
+	ShowWidgets = _PSX_ShowWidgets.GetValue() as bool
+	DebugToFile = _PSX_DebugToFile.GetValue() as bool
 
 	RegisterForMenu("InventoryMenu")
 	RegisterForMenu("ContainerMenu")
@@ -161,6 +175,8 @@ Function Maintenance()
 	endIf
 
 	handlingKeypress = false
+
+	UpdatePoisonWidgets()
 
 endFunction
 
@@ -375,18 +391,18 @@ Function DirectPoison(Potion akPoison, int aiHand)
 	endIf
 	
 	if (currentPoison)
-		if (ConfirmPoison == C_CONFIRM_TOPUP)
+		if (ConfirmPoison == C_CONFIRM_ALWAYS)
 			int conf = _PSX_ConfirmPoisonTopupMsg.Show()
 			if (conf != 0)
 				return
 			endIf
 		endIf
-	elseIf (!akPoison.IsPoison() && ConfirmPoison == C_CONFIRM_BENEF)
+	elseIf (!akPoison.IsPoison() && ConfirmPoison != C_CONFIRM_NEVER)
 		int conf = _PSX_ConfirmPoisonBeneficialMsg.Show()
 		if (conf != 0)
 			return
 		endIf
-	elseIf (ConfirmPoison > 0)
+	elseIf (ConfirmPoison == C_CONFIRM_ALWAYS || ConfirmPoison == C_CONFIRM_NEWPOISON)
 		int conf = _PSX_ConfirmPoisonMsg.Show()
 		if (conf != 0)
 			return
@@ -455,8 +471,13 @@ endFunction
 
 function UpdatePoisonWidgets()
 
-	UpdatePoisonWidget(0)
-	UpdatePoisonWidget(1)
+	if (ShowWidgets)
+		UpdatePoisonWidget(0)
+		UpdatePoisonWidget(1)
+		SendModEvent("_PSX_SetVisibility", "visible")
+	else
+		SendModEvent("_PSX_SetVisibility", "hidden")
+	endIf
 
 endFunction
 

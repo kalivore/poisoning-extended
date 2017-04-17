@@ -2,7 +2,7 @@ scriptname _PSX_PoisonWidgets extends SKI_WidgetBase
 
 ; PRIVATE VARIABLES -------------------------------------------------------------------------------
 
-bool	_visible			= true
+bool	_visible
 string	_poisonTextLeft
 string	_poisonTextRight
 float 	_leftX
@@ -109,73 +109,61 @@ endProperty
 ; EVENTS ------------------------------------------------------------------------------------------
 
 Event OnGameReload()
-	Y = 680
-	_leftX = 90
-	_rightX = 850
+	; this happens before OnWidgetReset
+	
 	parent.OnGameReload()
-	RegisterForModEvent("_PSX_VisToggle", "OnVisToggle")
+	
+	RegisterForModEvent("_PSX_SetVisibility", "OnSetVisibility")
 	RegisterForModEvent("_PSX_SetPoisonTextLeft", "OnSetPoisonTextLeft")
 	RegisterForModEvent("_PSX_SetPoisonTextRight", "OnSetPoisonTextRight")
 	RegisterForModEvent("_PSX_BumpPoisonUp", "OnBumpPoisonUp")
 	RegisterForModEvent("_PSX_BumpPoisonDown", "OnBumpPoisonDown")
 	RegisterForModEvent("_PSX_BumpPoisonLeft", "OnBumpPoisonLeft")
 	RegisterForModEvent("_PSX_BumpPoisonRight", "OnBumpPoisonRight")
-	Debug.Trace("_PSX_PoisonWidgets - OnGameReload (type '" + GetWidgetType() + "')")
-	UpdateStatus()
+	
+	UpdateStatus("OnGameReload")
 EndEvent
 
 ; @override SKI_WidgetBase
 event OnWidgetReset()
 	parent.OnWidgetReset()
 	
-	UI.InvokeBool(HUD_MENU, WidgetRoot + ".setVisible", _visible)
+	_leftX = 90
+	_leftY = 680
+	_rightX = 850
+	_rightY = 680
 	UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonLeftPosX", _leftX) 
+	UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonLeftPosY", _leftY) 
 	UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonRightPosX", _rightX) 
+	UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonRightPosY", _rightY) 
 	
-	string msg = "OnWidgetReset - visible: " + _visible + ", text: " + _poisonTextLeft
-	;Debug.Notification(msg)
-	Debug.Trace(msg)
+	UpdateStatus("OnWidgetReset")
 endEvent
 
 
-Event OnVisToggle(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
-	bool wasVis = Visible
-	Visible = !wasVis
-	;UpdateStatus()
+Event OnSetVisibility(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+	Visible = a_strArg == "visible"
 EndEvent
 
 Event OnSetPoisonTextLeft(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
 	PoisonTextLeft = a_strArg
-	;UpdateStatus()
 EndEvent
 
 Event OnSetPoisonTextRight(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
 	PoisonTextRight = a_strArg
-	;UpdateStatus()
 EndEvent
 
+
 Event OnBumpPoisonUp(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
-	float oldRightY = RightY
-	RightY = oldRightY - 50
-	Debug.Notification(oldRightY + " => " + RightY)
 EndEvent
 
 Event OnBumpPoisonDown(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
-	float oldRightY = RightY
-	RightY = oldRightY + 50
-	Debug.Notification(oldRightY + " => " + RightY)
 EndEvent
 
 Event OnBumpPoisonLeft(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
-	float oldRightX = RightX
-	RightX = oldRightX - 50
-	Debug.Notification(oldRightX + " => " + RightX)
 EndEvent
 
 Event OnBumpPoisonRight(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
-	float oldRightX = RightX
-	RightX = oldRightX + 50
-	Debug.Notification(oldRightX + " => " + RightX)
 EndEvent
 
 
@@ -193,20 +181,71 @@ string function GetWidgetType()
 endFunction
 
 
-function UpdateStatus()
-	if (Ready)
-		UI.InvokeBool(HUD_MENU, WidgetRoot + ".setVisible", _visible)
-		UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonLeftPosX", _leftX) 
-		UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonRightPosX", _rightX) 
-		
-		;UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonTextLeft", _poisonTextLeft)
-		;UI.InvokeString(HUD_MENU, WidgetRoot + ".setPoisonTextRight", _poisonTextRight)
-		;UI.InvokeFloat(HUD_MENU, WidgetRoot + ".setPositionX", 950)
-		;UI.InvokeFloat(HUD_MENU, WidgetRoot + ".setPositionY", 500)
-		;UI.InvokeFloat(HUD_MENU, WidgetRoot + ".setAlpha", 50)
-		string msg = "UpdateStatus - visible: pub " + Visible + ", pri " + _visible + "; text: pub " + PoisonTextLeft + ", pri " + _poisonTextLeft
-		;Debug.Notification(msg)
-		Debug.Trace(msg)
+function UpdateStatus(string src)
+
+	if (!Ready)
+		return
 	endIf
+
+	;string msg = src + "::UpdateStatus. Overall: (" + X + "," + Y + "), visible " + Visible + "; Left: (" + LeftX + "," + LeftY + "), " + PoisonTextLeft + "; Right: (" + RightX + "," + RightY + ")" + PoisonTextRight
+	;Debug.Notification(msg)
+	;Debug.Trace(msg)
+
 endFunction
 
+
+state BumpingLeft
+
+	Event OnBumpPoisonUp(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldLeftY = LeftY
+		LeftY = oldLeftY - 50
+		Debug.Notification(oldLeftY + " => " + LeftY)
+	EndEvent
+
+	Event OnBumpPoisonDown(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldLeftY = LeftY
+		LeftY = oldLeftY + 50
+		Debug.Notification(oldLeftY + " => " + LeftY)
+	EndEvent
+
+	Event OnBumpPoisonLeft(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldLeftX = LeftX
+		LeftX = oldLeftX - 50
+		Debug.Notification(oldLeftX + " => " + LeftX)
+	EndEvent
+
+	Event OnBumpPoisonRight(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldLeftX = LeftX
+		LeftX = oldLeftX + 50
+		Debug.Notification(oldLeftX + " => " + LeftX)
+	EndEvent
+
+endState
+
+state BumpingRght
+
+	Event OnBumpPoisonUp(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldRightY = RightY
+		RightY = oldRightY - 50
+		Debug.Notification(oldRightY + " => " + RightY)
+	EndEvent
+
+	Event OnBumpPoisonDown(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldRightY = RightY
+		RightY = oldRightY + 50
+		Debug.Notification(oldRightY + " => " + RightY)
+	EndEvent
+
+	Event OnBumpPoisonLeft(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldRightX = RightX
+		RightX = oldRightX - 50
+		Debug.Notification(oldRightX + " => " + RightX)
+	EndEvent
+
+	Event OnBumpPoisonRight(string a_eventName, string a_strArg, float a_numArg, Form a_sender)
+		float oldRightX = RightX
+		RightX = oldRightX + 50
+		Debug.Notification(oldRightX + " => " + RightX)
+	EndEvent
+
+endState

@@ -18,12 +18,12 @@
 		poisonTextLeft = poisonLeft.poisonTextLeft;
 		poisonTextLeft.textAutoSize = "shrink";
 		poisonTextLeft.verticalAlign = "center";
-		poisonTextLeft.text = "Test poison of having a totally long and fully unwieldy name... (88)";
+		setPoisonTextLeft("");
 		
 		poisonTextRight = poisonRight.poisonTextRight;
 		poisonTextRight.textAutoSize = "shrink";
 		poisonTextRight.verticalAlign = "center";
-		poisonTextRight.text = "Test poison of having a totally long and fully unwieldy name... (88)";
+		setPoisonTextRight("");
 	}
 
 

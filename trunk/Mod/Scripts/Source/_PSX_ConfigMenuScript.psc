@@ -21,8 +21,6 @@ int offsetX = -8
 int offsetY = 31
 
 string C_STRING_EMPTY = ""
-string C_STRING_FORMAT_PLACEHOLDER_ZERO = "{0}"
-string C_STRING_INDEX_NAME_SEPARATOR = ": "
 
 ; Translatables
 string C_MOD_NAME = "$PSXModName"
@@ -31,23 +29,38 @@ string C_FORMAT_PLACEHOLDER_SECONDS = "$PSXFormatPlaceholderSeconds"
 string C_FORMAT_PLACEHOLDER_PERCENT = "$PSXFormatPlaceholderPercent"
 string C_MENU_OPTION_ALWAYS = "$PSXMenuOptionAlways"
 string C_MENU_OPTION_NEW_POISON = "$PSXMenuOptionNewPoison"
-string C_MENU_OPTION_BENEF = "$PSXMenuOptionBeneficial"
+string C_MENU_OPTION_BENEFICIAL = "$PSXMenuOptionBeneficial"
 string C_MENU_OPTION_NEVER = "$PSXMenuOptionNever"
 string C_OPTION_LABEL_PROMPTS = "$PSXOptionLabelPrompts"
+string C_OPTION_LABEL_HOTKEYLEFT = "$PSXOptionLabelHotkeyLeft"
+string C_OPTION_LABEL_HOTKEYRGHT = "$PSXOptionLabelHotkeyRght"
+string C_OPTION_LABEL_SHOWWIDGETS = "$PSXOptionLabelShowWidgets"
 string C_OPTION_LABEL_DEBUG = "$PSXOptionLabelDebug"
 string C_OPTION_LABEL_CURRENT_VERSION = "$PSXOptionLabelCurrentVersion"
 string C_INFO_TEXT_POISONPROMPT = "$PSXInfoTextPoisonPrompt"
+string C_INFO_TEXT_SHOWWIDGETS = "$PSXInfoTextShowWidgets"
 string C_INFO_TEXT_DEBUG = "$PSXInfoTextDebug"
 
 ; OIDs (T:Text B:Toggle S:Slider M:Menu, C:Color, K:Key)
 int			_poisonPromptOID_M
+int			_hotkeyLeftOID_K
+int			_hotkeyRghtOID_K
+int			_showWidgetsOID_B
 int			_debugOID_B
 int			_currentVersionOID_T
 
 
 ; State
 int poisonPrompt
+int poisonPromptDefault
+int hotkeyLeft
+int hotkeyLeftDefault
+int hotkeyRght
+int hotkeyRghtDefault
+bool showWidgets
+bool showWidgetsDefault
 bool modDebug
+bool modDebugDefault
 
 ; Internal
 _PSX_QuestScript Property PSXQuest Auto
@@ -73,10 +86,17 @@ event OnConfigInit()
 	Pages[0] = C_PAGE_MISC
 	
 	poisonPromptOptions = new string[4]
-	poisonPromptOptions[0] = C_MENU_OPTION_NEVER
-	poisonPromptOptions[1] = C_MENU_OPTION_BENEF
-	poisonPromptOptions[2] = C_MENU_OPTION_NEW_POISON
-	poisonPromptOptions[3] = C_MENU_OPTION_ALWAYS
+	poisonPromptOptions[0] = C_MENU_OPTION_ALWAYS
+	poisonPromptOptions[1] = C_MENU_OPTION_NEW_POISON
+	poisonPromptOptions[2] = C_MENU_OPTION_BENEFICIAL
+	poisonPromptOptions[3] = C_MENU_OPTION_NEVER
+	
+	poisonPromptDefault = 1
+	hotkeyLeftDefault = -1
+	hotkeyRghtDefault = -1
+	showWidgetsDefault = true
+	modDebugDefault = false
+	
 endEvent
 
 
@@ -105,11 +125,26 @@ event OnPageReset(string a_page)
 	; get values to use on page
 	if (a_page == C_PAGE_MISC)
 	
-		_poisonPromptOID_M	= AddMenuOption(C_OPTION_LABEL_PROMPTS, PSXQuest.ConfirmPoison)
+		poisonPrompt = PSXQuest.ConfirmPoison
+		hotkeyLeft = PSXQuest.KeycodePoisonLeft
+		hotkeyRght = PSXQuest.KeycodePoisonRght
+		showWidgets = PSXQuest.ShowWidgets
+		modDebug = PSXQuest.DebugToFile
+	
+		_poisonPromptOID_M	= AddMenuOption(C_OPTION_LABEL_PROMPTS, poisonPromptOptions[poisonPrompt])
 		
 		AddEmptyOption()
 		
-		_debugOID_B	= AddToggleOption(C_OPTION_LABEL_DEBUG, PSXQuest.DebugToFile)
+		_hotkeyRghtOID_K	= AddKeyMapOption(C_OPTION_LABEL_HOTKEYRGHT, hotkeyRght)
+		_hotkeyLeftOID_K	= AddKeyMapOption(C_OPTION_LABEL_HOTKEYLEFT, hotkeyLeft)
+		
+		AddEmptyOption()
+		
+		_showWidgetsOID_B	= AddToggleOption(C_OPTION_LABEL_SHOWWIDGETS, showWidgets)
+		
+		AddEmptyOption()
+		
+		_debugOID_B	= AddToggleOption(C_OPTION_LABEL_DEBUG, modDebug)
 		
 		AddEmptyOption()
 		
@@ -123,6 +158,7 @@ event OnPageReset(string a_page)
 	
 endEvent
 
+
 ; @implements SKI_ConfigBase
 event OnOptionHighlight(int a_option)
 	{Called when highlighting an option}
@@ -130,25 +166,32 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _poisonPromptOID_M)
 		SetInfoText(C_INFO_TEXT_POISONPROMPT)
 	
+	elseIf (a_option == _showWidgetsOID_B)
+		SetInfoText(C_INFO_TEXT_SHOWWIDGETS)
+	
 	elseIf (a_option == _debugOID_B)
 		SetInfoText(C_INFO_TEXT_DEBUG)
 	
 	endIf
+	
 endEvent
 
 ; @implements SKI_ConfigBase
 event OnOptionMenuOpen(int a_option)
 	{Called when the user selects a menu option}
+	
 	if (a_option == _poisonPromptOID_M)
-		SetMenuDialogStartIndex(0)
-		SetMenuDialogDefaultIndex(0)
+		SetMenuDialogStartIndex(poisonPrompt)
+		SetMenuDialogDefaultIndex(poisonPromptDefault)
 		SetMenuDialogOptions(poisonPromptOptions)
 	endIf
+	
 endEvent
 
 ; @implements SKI_ConfigBase
 event OnOptionMenuAccept(int a_option, int a_index)
 	{Called when the user accepts a new menu entry}
+	
 	if (a_option == _poisonPromptOID_M)
 		poisonPrompt = a_index
 		SetMenuOptionValue(_poisonPromptOID_M, poisonPromptOptions[poisonPrompt])
@@ -162,19 +205,18 @@ endEvent
 event OnOptionSelect(int a_option)
 	{Called when a non-interactive option has been selected}
 
-	if (a_option == _debugOID_B)
+	if (a_option == _showWidgetsOID_B)
+		showWidgets = !showWidgets
+		SetToggleOptionValue(a_option, showWidgets)
+		PSXQuest.ShowWidgets = showWidgets
+
+	elseIf (a_option == _debugOID_B)
 		modDebug = !modDebug
 		SetToggleOptionValue(a_option, modDebug)
 		PSXQuest.DebugToFile = modDebug
 
 	endIf
-endEvent
 
-; @implements SKI_ConfigBase
-event OnOptionDefault(int a_option)
-	{Called when resetting an option to its default value}
-
-	; ...
 endEvent
 
 ; @implements SKI_ConfigBase
@@ -189,10 +231,70 @@ event OnOptionSliderAccept(int a_option, float a_value)
 
 endEvent
 
+event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl, string a_conflictName)
+	{Called when a key has been remapped}
+	
+	if (!passesKeyConflictControl(a_keyCode, a_conflictControl, a_conflictName))
+		return
+	endIf
+	
+	if (a_option == _hotkeyLeftOID_K)
+		hotkeyLeft = a_keyCode
+		SetKeyMapOptionValue(a_option, hotkeyLeft)
+		PSXQuest.KeycodePoisonLeft = hotkeyLeft
 
-string Function FormatString(string asTemplate, string asEffectName)
-	int subPos = StringUtil.Find(asTemplate, C_STRING_FORMAT_PLACEHOLDER_ZERO)
-	return StringUtil.Substring(asTemplate, 0, subPos) \
-			+ asEffectName \
-			+ StringUtil.Substring(asTemplate, subPos + StringUtil.GetLength(C_STRING_FORMAT_PLACEHOLDER_ZERO))
+	elseIf (a_option == _hotkeyRghtOID_K)
+		hotkeyRght = a_keyCode
+		SetKeyMapOptionValue(a_option, hotkeyRght)
+		PSXQuest.KeycodePoisonRght = hotkeyRght
+
+	endIf
+
+endEvent
+
+; @implements SKI_ConfigBase
+event OnOptionDefault(int a_option)
+	{Called when resetting an option to its default value}
+
+	if (a_option == _showWidgetsOID_B)
+		showWidgets = showWidgetsDefault
+		SetToggleOptionValue(a_option, showWidgets)
+		PSXQuest.ShowWidgets = showWidgets
+
+	elseIf (a_option == _debugOID_B)
+		modDebug = modDebugDefault
+		SetToggleOptionValue(a_option, modDebug)
+		PSXQuest.DebugToFile = modDebug
+
+	elseIf (a_option == _hotkeyLeftOID_K)
+		hotkeyLeft = hotkeyLeftDefault
+		SetKeyMapOptionValue(a_option, hotkeyLeft)
+		PSXQuest.KeycodePoisonLeft = hotkeyLeft
+
+	elseIf (a_option == _hotkeyRghtOID_K)
+		hotkeyRght = hotkeyRghtDefault
+		SetKeyMapOptionValue(a_option, hotkeyRght)
+		PSXQuest.KeycodePoisonRght = hotkeyRght
+
+	elseIf (a_option == _poisonPromptOID_M)
+		poisonPrompt = poisonPromptDefault
+		SetMenuOptionValue(_poisonPromptOID_M, poisonPromptOptions[poisonPrompt])
+		PSXQuest.ConfirmPoison = poisonPrompt
+
+	endIf
+
+endEvent
+
+
+; shamelessly robbed from sevencardz.. :p
+bool Function passesKeyConflictControl(int keyCode, String conflictControl, String conflictName)
+	if conflictControl != "" && keyCode > 0
+		String msg = "$PSXKeyConflict{" + conflictControl + "}"
+		if conflictName != ""
+			msg += "{" + conflictName + "}"
+		endIf
+		return ShowMessage(msg, true, "$Yes", "$No")
+	else
+		return true
+	endIf
 endFunction
