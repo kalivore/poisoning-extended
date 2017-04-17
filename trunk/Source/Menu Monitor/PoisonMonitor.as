@@ -14,6 +14,8 @@ class PoisonMonitor
 	private var _poisonData:TextField;
 	private var _countFormat:TextFormat;
 	
+	public var Test:String;
+	
 	public function PoisonMonitor(list:BasicList, itemCard:Object, tabBar:Object)
 	{
 		_list = list;
@@ -38,6 +40,7 @@ class PoisonMonitor
 			this.updateSelected("Init");
 		}
 		
+		Test = "PoisonMonitor Test";
 		//skse.Log("PoisonMonitor loaded in: " + _list + ", attach to " + _itemCard);
 	}
 
@@ -55,6 +58,7 @@ class PoisonMonitor
 	{
 		var index = event.index;
 		//skyui.util.Debug.dump("onItemPress", event);
+
 		if (_list.selectedEntry != null)
 		{
 			this.updateSelected("Pres");
@@ -75,7 +79,7 @@ class PoisonMonitor
 	{
 		var index = event.index;
 		//skse.Log("Now showing tab " + index);
-		skse.SendModEvent("_psx_tabChange", "", index);
+		skse.SendModEvent("_psx_tabChanged", "", index);
 	}
 	
 	public function updateSelected(source:String)
@@ -83,21 +87,35 @@ class PoisonMonitor
 		_poisonData.text = "";
 		_poisonData._visible = false;
 
-		var isWeapon = _list.selectedEntry.type == 2 && _list.selectedEntry.equipState > 1
-		//skyui.util.Debug.log(source + "::Selected " + _list.selectedEntry.text + " (" + _list.selectedEntry.formId + "): equipState " + _list.selectedEntry.equipState + " (" + _list.selectedEntry.isEquipped + "), _currentframe: " + _poisonInst._currentframe)
-		
-		if (isWeapon && _list.selectedEntry.isEquipped && _poisonInst._currentframe == "2")
+		// use _poisonInst._currentframe == "2" rather than _list.selectedEntry.isPoisoned, as the latter doesn't update immediately
+		if (_list.selectedEntry.formType == 41 && _list.selectedEntry.isEquipped && _poisonInst._currentframe == "2")
 		{
 			if (!_poisonData) {
 				this.constructPoisonData();	
 			}
 			//skse.Log("Selected weapon " + _list.selectedEntry.formId + ": " + _list.selectedEntry.text + ", in hand " + (_list.selectedEntry.equipState - 2))
-			skse.SendModEvent("_psx_selectionChange", "weapon", (_list.selectedEntry.equipState - 2), _list.selectedEntry.formId);
+			skse.SendModEvent("_psx_selectionChanged", "weapon", (_list.selectedEntry.equipState - 2), _list.selectedEntry.formId);
 			_poisonData._visible = true;
-			return;
+		}
+	}
+
+	public function getCurrentForm(keyCode:Number)
+	{
+		//skyui.util.Debug.dump("getCurrentForm", _list.selectedEntry);
+		
+		var isWeapon = _list.selectedEntry.formType == 41 && _list.selectedEntry.isEquipped
+		var isPotion = _list.selectedEntry.formType == 46
+		if (isWeapon || isPotion)
+		{
+			skse.SendModEvent("_psx_requestedFormSent", isWeapon ? "weapon" : "potion", keyCode, _list.selectedEntry.formId);
+		}
+		else
+		{
+			skse.SendModEvent("_psx_requestedFormSent", "", -1);
 		}
 	}
 	
+
 	private function constructTextFormat() {
 		_countFormat = new TextFormat();
 		_countFormat.font = "$EverywhereFont";

@@ -7,6 +7,7 @@ import skyui.components.list.TabularList;
 
 class Main 
 {
+	public static var poisonMonitor:PoisonMonitor;
 	
 	public static function main(swfRoot:MovieClip):Void 
 	{
@@ -14,13 +15,10 @@ class Main
 		var itemCard:Object = swfRoot._parent.Menu_mc.itemCard;
 		var tabBar:Object = swfRoot._parent.Menu_mc.inventoryLists.tabBar;
 		
-		var monitor:PoisonMonitor = new PoisonMonitor(itemList, itemCard, tabBar);
-
+		poisonMonitor = new PoisonMonitor(itemList, itemCard, tabBar);
 	}
 	
 	public function Main() 
 	{
-		
 	}
-	
 }
