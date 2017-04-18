@@ -194,6 +194,8 @@ function UpdateStatus(string src)
 endFunction
 
 
+; STATES ---------------------------------------------------------------------------------------
+
 state BumpingLeft
 
 	Event OnBumpPoisonUp(string a_eventName, string a_strArg, float a_numArg, Form a_sender)

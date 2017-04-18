@@ -41,15 +41,6 @@ string C_INFO_TEXT_POISONPROMPT = "$PSXInfoTextPoisonPrompt"
 string C_INFO_TEXT_SHOWWIDGETS = "$PSXInfoTextShowWidgets"
 string C_INFO_TEXT_DEBUG = "$PSXInfoTextDebug"
 
-; OIDs (T:Text B:Toggle S:Slider M:Menu, C:Color, K:Key)
-int			_poisonPromptOID_M
-int			_hotkeyLeftOID_K
-int			_hotkeyRghtOID_K
-int			_showWidgetsOID_B
-int			_debugOID_B
-int			_currentVersionOID_T
-
-
 ; State
 int poisonPrompt
 int poisonPromptDefault
@@ -131,159 +122,144 @@ event OnPageReset(string a_page)
 		showWidgets = PSXQuest.ShowWidgets
 		modDebug = PSXQuest.DebugToFile
 	
-		_poisonPromptOID_M	= AddMenuOption(C_OPTION_LABEL_PROMPTS, poisonPromptOptions[poisonPrompt])
+		AddMenuOptionST("PoisonPrompt_M", C_OPTION_LABEL_PROMPTS, poisonPromptOptions[poisonPrompt])
 		
 		AddEmptyOption()
 		
-		_hotkeyRghtOID_K	= AddKeyMapOption(C_OPTION_LABEL_HOTKEYRGHT, hotkeyRght)
-		_hotkeyLeftOID_K	= AddKeyMapOption(C_OPTION_LABEL_HOTKEYLEFT, hotkeyLeft)
+		AddKeyMapOptionST("HotkeyRght_K", C_OPTION_LABEL_HOTKEYRGHT, hotkeyRght)
+		AddKeyMapOptionST("HotkeyLeft_K", C_OPTION_LABEL_HOTKEYLEFT, hotkeyLeft)
 		
 		AddEmptyOption()
 		
-		_showWidgetsOID_B	= AddToggleOption(C_OPTION_LABEL_SHOWWIDGETS, showWidgets)
+		AddToggleOptionST("ShowWidgets_B", C_OPTION_LABEL_SHOWWIDGETS, showWidgets)
 		
 		AddEmptyOption()
 		
-		_debugOID_B	= AddToggleOption(C_OPTION_LABEL_DEBUG, modDebug)
+		AddToggleOptionST("Debug_B", C_OPTION_LABEL_DEBUG, modDebug)
 		
 		AddEmptyOption()
 		
-		_currentVersionOID_T = AddTextOption(C_OPTION_LABEL_CURRENT_VERSION, PSXQuest.GetVersionAsString(PSXQuest.CurrentVersion), OPTION_FLAG_DISABLED)
+		AddTextOptionST("CurrentVersion_T", C_OPTION_LABEL_CURRENT_VERSION, PSXQuest.GetVersionAsString(PSXQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
 		
-		return
-
 	endIf
 	
 endEvent
 
 
-; @implements SKI_ConfigBase
-event OnOptionHighlight(int a_option)
-	{Called when highlighting an option}
+state PoisonPrompt_M
 
-	if (a_option == _poisonPromptOID_M)
-		SetInfoText(C_INFO_TEXT_POISONPROMPT)
-	
-	elseIf (a_option == _showWidgetsOID_B)
-		SetInfoText(C_INFO_TEXT_SHOWWIDGETS)
-	
-	elseIf (a_option == _debugOID_B)
-		SetInfoText(C_INFO_TEXT_DEBUG)
-	
-	endIf
-	
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionMenuOpen(int a_option)
-	{Called when the user selects a menu option}
-	
-	if (a_option == _poisonPromptOID_M)
+	event OnMenuOpenST()
 		SetMenuDialogStartIndex(poisonPrompt)
 		SetMenuDialogDefaultIndex(poisonPromptDefault)
 		SetMenuDialogOptions(poisonPromptOptions)
-	endIf
+	endEvent
 	
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionMenuAccept(int a_option, int a_index)
-	{Called when the user accepts a new menu entry}
-	
-	if (a_option == _poisonPromptOID_M)
+	event OnMenuAcceptST(int a_index)
 		poisonPrompt = a_index
-		SetMenuOptionValue(_poisonPromptOID_M, poisonPromptOptions[poisonPrompt])
+		SetMenuOptionValueST(poisonPromptOptions[poisonPrompt])
 		PSXQuest.ConfirmPoison = poisonPrompt
-
-	endIf	
-
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionSelect(int a_option)
-	{Called when a non-interactive option has been selected}
-
-	if (a_option == _showWidgetsOID_B)
-		showWidgets = !showWidgets
-		SetToggleOptionValue(a_option, showWidgets)
-		PSXQuest.ShowWidgets = showWidgets
-
-	elseIf (a_option == _debugOID_B)
-		modDebug = !modDebug
-		SetToggleOptionValue(a_option, modDebug)
-		PSXQuest.DebugToFile = modDebug
-
-	endIf
-
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionSliderOpen(int a_option)
-	{Called when a slider option has been selected}
-
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionSliderAccept(int a_option, float a_value)
-	{Called when a new slider value has been accepted}
-
-endEvent
-
-event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl, string a_conflictName)
-	{Called when a key has been remapped}
+	endEvent
 	
-	if (!passesKeyConflictControl(a_keyCode, a_conflictControl, a_conflictName))
-		return
-	endIf
-	
-	if (a_option == _hotkeyLeftOID_K)
-		hotkeyLeft = a_keyCode
-		SetKeyMapOptionValue(a_option, hotkeyLeft)
-		PSXQuest.KeycodePoisonLeft = hotkeyLeft
-
-	elseIf (a_option == _hotkeyRghtOID_K)
-		hotkeyRght = a_keyCode
-		SetKeyMapOptionValue(a_option, hotkeyRght)
-		PSXQuest.KeycodePoisonRght = hotkeyRght
-
-	endIf
-
-endEvent
-
-; @implements SKI_ConfigBase
-event OnOptionDefault(int a_option)
-	{Called when resetting an option to its default value}
-
-	if (a_option == _showWidgetsOID_B)
-		showWidgets = showWidgetsDefault
-		SetToggleOptionValue(a_option, showWidgets)
-		PSXQuest.ShowWidgets = showWidgets
-
-	elseIf (a_option == _debugOID_B)
-		modDebug = modDebugDefault
-		SetToggleOptionValue(a_option, modDebug)
-		PSXQuest.DebugToFile = modDebug
-
-	elseIf (a_option == _hotkeyLeftOID_K)
-		hotkeyLeft = hotkeyLeftDefault
-		SetKeyMapOptionValue(a_option, hotkeyLeft)
-		PSXQuest.KeycodePoisonLeft = hotkeyLeft
-
-	elseIf (a_option == _hotkeyRghtOID_K)
-		hotkeyRght = hotkeyRghtDefault
-		SetKeyMapOptionValue(a_option, hotkeyRght)
-		PSXQuest.KeycodePoisonRght = hotkeyRght
-
-	elseIf (a_option == _poisonPromptOID_M)
+	event OnDefaultST()
 		poisonPrompt = poisonPromptDefault
-		SetMenuOptionValue(_poisonPromptOID_M, poisonPromptOptions[poisonPrompt])
+		SetMenuOptionValueST(poisonPromptOptions[poisonPrompt])
 		PSXQuest.ConfirmPoison = poisonPrompt
+	endEvent
 
-	endIf
+	event OnHighlightST()
+		SetInfoText(C_INFO_TEXT_POISONPROMPT)
+	endEvent
 
-endEvent
+endState
+
+state HotkeyLeft_K
+
+	event OnKeyMapChangeST(int a_keyCode, string a_conflictControl, string a_conflictName)
+		if (!passesKeyConflictControl(a_keyCode, a_conflictControl, a_conflictName))
+			return
+		endIf
+		hotkeyLeft = a_keyCode
+		SetKeyMapOptionValueST(hotkeyLeft)
+		PSXQuest.KeycodePoisonLeft = hotkeyLeft
+	endEvent
+	
+	event OnDefaultST()
+		hotkeyLeft = hotkeyLeftDefault
+		SetKeyMapOptionValueST(hotkeyLeft)
+		PSXQuest.KeycodePoisonLeft = hotkeyLeft
+	endEvent
+	
+	event OnHighlightST()
+		
+	endEvent
+
+endState
+
+state HotkeyRght_K
+
+	event OnKeyMapChangeST(int a_keyCode, string a_conflictControl, string a_conflictName)
+		if (!passesKeyConflictControl(a_keyCode, a_conflictControl, a_conflictName))
+			return
+		endIf
+		hotkeyRght = a_keyCode
+		SetKeyMapOptionValueST(hotkeyRght)
+		PSXQuest.KeycodePoisonRght = hotkeyRght
+	endEvent
+	
+	event OnDefaultST()
+		hotkeyRght = hotkeyRghtDefault
+		SetKeyMapOptionValueST(hotkeyRght)
+		PSXQuest.KeycodePoisonRght = hotkeyRght
+	endEvent
+	
+	event OnHighlightST()
+		
+	endEvent
+
+endState
+
+state ShowWidgets_B
+
+	event OnSelectST()
+		showWidgets = !showWidgets
+		SetToggleOptionValueST(showWidgets)
+		PSXQuest.ShowWidgets = showWidgets
+	endEvent
+	
+	event OnDefaultST()
+		showWidgets = showWidgetsDefault
+		SetToggleOptionValueST(showWidgets)
+		PSXQuest.ShowWidgets = showWidgets
+	endEvent
+
+	event OnHighlightST()
+		SetInfoText(C_INFO_TEXT_SHOWWIDGETS)
+	endEvent
+
+endState
+
+state Debug_B
+
+	event OnSelectST()
+		modDebug = !modDebug
+		SetToggleOptionValueST(modDebug)
+		PSXQuest.DebugToFile = modDebug
+	endEvent
+	
+	event OnDefaultST()
+		modDebug = modDebugDefault
+		SetToggleOptionValueST(modDebug)
+		PSXQuest.DebugToFile = modDebug
+	endEvent
+
+	event OnHighlightST()
+		SetInfoText(C_INFO_TEXT_DEBUG)
+	endEvent
+
+endState
+
 
 
 ; shamelessly robbed from sevencardz.. :p
