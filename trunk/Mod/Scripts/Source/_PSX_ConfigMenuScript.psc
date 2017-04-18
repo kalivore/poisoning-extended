@@ -31,19 +31,27 @@ string C_MENU_OPTION_ALWAYS = "$PSXMenuOptionAlways"
 string C_MENU_OPTION_NEW_POISON = "$PSXMenuOptionNewPoison"
 string C_MENU_OPTION_BENEFICIAL = "$PSXMenuOptionBeneficial"
 string C_MENU_OPTION_NEVER = "$PSXMenuOptionNever"
-string C_OPTION_LABEL_PROMPTS = "$PSXOptionLabelPrompts"
+string C_HEADER_LABEL_PROMPTS = "$PSXHeaderLabelPrompts"
+string C_HEADER_LABEL_WIDGETS = "$PSXHeaderLabelWidgets"
+string C_OPTION_LABEL_POISONPROMPT = "$PSXOptionLabelPoisonPrompt"
+string C_OPTION_LABEL_CLEANPROMPT = "$PSXOptionLabelCleanPrompt"
 string C_OPTION_LABEL_HOTKEYLEFT = "$PSXOptionLabelHotkeyLeft"
 string C_OPTION_LABEL_HOTKEYRGHT = "$PSXOptionLabelHotkeyRght"
 string C_OPTION_LABEL_SHOWWIDGETS = "$PSXOptionLabelShowWidgets"
 string C_OPTION_LABEL_DEBUG = "$PSXOptionLabelDebug"
 string C_OPTION_LABEL_CURRENT_VERSION = "$PSXOptionLabelCurrentVersion"
 string C_INFO_TEXT_POISONPROMPT = "$PSXInfoTextPoisonPrompt"
+string C_INFO_TEXT_CLEANPROMPT = "$PSXInfoTextCleanPrompt"
+string C_INFO_TEXT_POISONLEFT = "$PSXInfoTextPoisonLeft"
+string C_INFO_TEXT_POISONRGHT = "$PSXInfoTextPoisonRght"
 string C_INFO_TEXT_SHOWWIDGETS = "$PSXInfoTextShowWidgets"
 string C_INFO_TEXT_DEBUG = "$PSXInfoTextDebug"
 
 ; State
 int poisonPrompt
 int poisonPromptDefault
+int cleanPrompt
+int cleanPromptDefault
 int hotkeyLeft
 int hotkeyLeftDefault
 int hotkeyRght
@@ -57,6 +65,7 @@ bool modDebugDefault
 _PSX_QuestScript Property PSXQuest Auto
 
 string[] poisonPromptOptions
+string[] cleanPromptOptions
 
 
 ; INITIALIZATION ----------------------------------------------------------------------------------
@@ -77,12 +86,17 @@ event OnConfigInit()
 	Pages[0] = C_PAGE_MISC
 	
 	poisonPromptOptions = new string[4]
-	poisonPromptOptions[0] = C_MENU_OPTION_ALWAYS
-	poisonPromptOptions[1] = C_MENU_OPTION_NEW_POISON
-	poisonPromptOptions[2] = C_MENU_OPTION_BENEFICIAL
-	poisonPromptOptions[3] = C_MENU_OPTION_NEVER
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_ALWAYS] = C_MENU_OPTION_ALWAYS
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_NEWPOISON] = C_MENU_OPTION_NEW_POISON
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_BENEFICIAL] = C_MENU_OPTION_BENEFICIAL
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_NEVER] = C_MENU_OPTION_NEVER
 	
-	poisonPromptDefault = 1
+	cleanPromptOptions = new string[2]
+	cleanPromptOptions[PSXQuest.C_CONFIRM_CLEAN_ALWAYS] = C_MENU_OPTION_ALWAYS
+	cleanPromptOptions[PSXQuest.C_CONFIRM_CLEAN_NEVER] = C_MENU_OPTION_NEVER
+	
+	poisonPromptDefault = PSXQuest.C_CONFIRM_POISON_NEWPOISON
+	cleanPromptDefault = PSXQuest.C_CONFIRM_CLEAN_NEVER
 	hotkeyLeftDefault = -1
 	hotkeyRghtDefault = -1
 	showWidgetsDefault = true
@@ -94,6 +108,14 @@ endEvent
 ; EVENTS ------------------------------------------------------------------------------------------
 
 Event OnConfigOpen()
+
+	poisonPrompt = PSXQuest.ConfirmPoison
+	cleanPrompt = PSXQuest.ConfirmClean
+	hotkeyLeft = PSXQuest.KeycodePoisonLeft
+	hotkeyRght = PSXQuest.KeycodePoisonRght
+	showWidgets = PSXQuest.ShowWidgets
+	modDebug = PSXQuest.DebugToFile
+
 EndEvent
 
 Event OnConfigClose()
@@ -113,35 +135,25 @@ event OnPageReset(string a_page)
 
 	SetCursorFillMode(TOP_TO_BOTTOM)
 	
-	; get values to use on page
 	if (a_page == C_PAGE_MISC)
 	
-		poisonPrompt = PSXQuest.ConfirmPoison
-		hotkeyLeft = PSXQuest.KeycodePoisonLeft
-		hotkeyRght = PSXQuest.KeycodePoisonRght
-		showWidgets = PSXQuest.ShowWidgets
-		modDebug = PSXQuest.DebugToFile
-	
-		AddMenuOptionST("PoisonPrompt_M", C_OPTION_LABEL_PROMPTS, poisonPromptOptions[poisonPrompt])
+		AddHeaderOption(C_HEADER_LABEL_PROMPTS)
 		
-		AddEmptyOption()
-		
+		AddMenuOptionST("PoisonPrompt_M", C_OPTION_LABEL_POISONPROMPT, poisonPromptOptions[poisonPrompt])
+		AddMenuOptionST("CleanPrompt_M", C_OPTION_LABEL_CLEANPROMPT, cleanPromptOptions[cleanPrompt])
 		AddKeyMapOptionST("HotkeyRght_K", C_OPTION_LABEL_HOTKEYRGHT, hotkeyRght)
 		AddKeyMapOptionST("HotkeyLeft_K", C_OPTION_LABEL_HOTKEYLEFT, hotkeyLeft)
 		
 		AddEmptyOption()
 		
-		AddToggleOptionST("ShowWidgets_B", C_OPTION_LABEL_SHOWWIDGETS, showWidgets)
-		
-		AddEmptyOption()
-		
 		AddToggleOptionST("Debug_B", C_OPTION_LABEL_DEBUG, modDebug)
-		
-		AddEmptyOption()
-		
 		AddTextOptionST("CurrentVersion_T", C_OPTION_LABEL_CURRENT_VERSION, PSXQuest.GetVersionAsString(PSXQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
+		
+		AddHeaderOption(C_HEADER_LABEL_WIDGETS)
+		
+		AddToggleOptionST("ShowWidgets_B", C_OPTION_LABEL_SHOWWIDGETS, showWidgets)
 		
 	endIf
 	
@@ -170,6 +182,32 @@ state PoisonPrompt_M
 
 	event OnHighlightST()
 		SetInfoText(C_INFO_TEXT_POISONPROMPT)
+	endEvent
+
+endState
+
+state CleanPrompt_M
+
+	event OnMenuOpenST()
+		SetMenuDialogStartIndex(cleanPrompt)
+		SetMenuDialogDefaultIndex(cleanPromptDefault)
+		SetMenuDialogOptions(cleanPromptOptions)
+	endEvent
+	
+	event OnMenuAcceptST(int a_index)
+		cleanPrompt = a_index
+		SetMenuOptionValueST(cleanPromptOptions[cleanPrompt])
+		PSXQuest.ConfirmClean = cleanPrompt
+	endEvent
+	
+	event OnDefaultST()
+		cleanPrompt = cleanPromptDefault
+		SetMenuOptionValueST(cleanPromptOptions[cleanPrompt])
+		PSXQuest.ConfirmClean = cleanPrompt
+	endEvent
+
+	event OnHighlightST()
+		SetInfoText(C_INFO_TEXT_CLEANPROMPT)
 	endEvent
 
 endState

@@ -6,10 +6,13 @@ float previousVersion
 string Property ModName = "Poisoning Extended" AutoReadonly
 string Property LogName = "PoisoningExtended" AutoReadonly
 
-int Property C_CONFIRM_ALWAYS = 0 AutoReadonly
-int Property C_CONFIRM_NEWPOISON = 1 AutoReadonly
-int Property C_CONFIRM_BENEFICIAL = 2 AutoReadonly
-int Property C_CONFIRM_NEVER = 3 AutoReadonly
+int Property C_CONFIRM_POISON_NEVER = 0 AutoReadonly
+int Property C_CONFIRM_POISON_NEWPOISON = 1 AutoReadonly
+int Property C_CONFIRM_POISON_BENEFICIAL = 2 AutoReadonly
+int Property C_CONFIRM_POISON_ALWAYS = 3 AutoReadonly
+
+int Property C_CONFIRM_CLEAN_NEVER = 0 AutoReadonly
+int Property C_CONFIRM_CLEAN_ALWAYS = 1 AutoReadonly
 
 GlobalVariable Property _PSX_ConfirmPoison Auto
 int priConfirmPoison
@@ -20,6 +23,18 @@ int Property ConfirmPoison
 	function set(int val)
 		_PSX_ConfirmPoison.SetValue(val as int)
 		priConfirmPoison = val
+	endFunction
+endProperty
+
+GlobalVariable Property _PSX_ConfirmClean Auto
+int priConfirmClean
+int Property ConfirmClean
+	int function get()
+		return priConfirmClean
+	endFunction
+	function set(int val)
+		_PSX_ConfirmClean.SetValue(val as int)
+		priConfirmClean = val
 	endFunction
 endProperty
 
@@ -101,6 +116,7 @@ Perk Property _KLV_StashRefPerk  Auto
 Sound Property _PSX_PoisonUse Auto
 Sound Property _PSX_PoisonRemove  Auto
 Message Property _PSX_ConfirmPoisonMsg  Auto
+Message Property _PSX_ConfirmCleanMsg  Auto
 Message Property _PSX_ConfirmPoisonBeneficialMsg  Auto
 Message Property _PSX_ConfirmPoisonTopupMsg  Auto
 
@@ -158,6 +174,7 @@ Function Maintenance()
 	Debug.OpenUserLog(LogName)
 
 	ConfirmPoison = _PSX_ConfirmPoison.GetValue() as int
+	ConfirmClean = _PSX_ConfirmClean.GetValue() as int
 	KeycodePoisonLeft = _PSX_KeycodePoisonLeft.GetValue() as int
 	KeycodePoisonRght = _PSX_KeycodePoisonRght.GetValue() as int
 	ChargesPerPoisonVial = _PSX_ChargesPerPoisonVial.GetValue() as int
@@ -391,18 +408,18 @@ Function DirectPoison(Potion akPoison, int aiHand)
 	endIf
 	
 	if (currentPoison)
-		if (ConfirmPoison == C_CONFIRM_ALWAYS)
+		if (ConfirmPoison == C_CONFIRM_POISON_ALWAYS)
 			int conf = _PSX_ConfirmPoisonTopupMsg.Show()
 			if (conf != 0)
 				return
 			endIf
 		endIf
-	elseIf (!akPoison.IsPoison() && ConfirmPoison != C_CONFIRM_NEVER)
+	elseIf (!akPoison.IsPoison() && ConfirmPoison != C_CONFIRM_POISON_NEVER)
 		int conf = _PSX_ConfirmPoisonBeneficialMsg.Show()
 		if (conf != 0)
 			return
 		endIf
-	elseIf (ConfirmPoison == C_CONFIRM_ALWAYS || ConfirmPoison == C_CONFIRM_NEWPOISON)
+	elseIf (ConfirmPoison == C_CONFIRM_POISON_ALWAYS || ConfirmPoison == C_CONFIRM_POISON_NEWPOISON)
 		int conf = _PSX_ConfirmPoisonMsg.Show()
 		if (conf != 0)
 			return
@@ -447,6 +464,13 @@ Function RemovePoison(Weapon akWeapon)
 		msg = "Weapon in " + GetHandName(currentEquipSlot) + " hand is not poisoned"
 		DebugStuff(msg, msg)
 		return
+	endIf
+
+	if (ConfirmClean == C_CONFIRM_CLEAN_ALWAYS)
+		int conf = _PSX_ConfirmCleanMsg.Show()
+		if (conf != 0)
+			return
+		endIf
 	endIf
 
 	int currentCharges = _Q2C_Functions.WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
