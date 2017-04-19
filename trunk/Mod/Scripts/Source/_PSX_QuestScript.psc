@@ -7,8 +7,8 @@ string Property ModName = "Poisoning Extended" AutoReadonly
 string Property LogName = "PoisoningExtended" AutoReadonly
 
 int Property C_CONFIRM_POISON_NEVER = 0 AutoReadonly
-int Property C_CONFIRM_POISON_NEWPOISON = 1 AutoReadonly
-int Property C_CONFIRM_POISON_BENEFICIAL = 2 AutoReadonly
+int Property C_CONFIRM_POISON_BENEFICIAL = 1 AutoReadonly
+int Property C_CONFIRM_POISON_NEWPOISON = 2 AutoReadonly
 int Property C_CONFIRM_POISON_ALWAYS = 3 AutoReadonly
 
 int Property C_CONFIRM_CLEAN_NEVER = 0 AutoReadonly
@@ -111,6 +111,7 @@ bool Property DebugToFile
 	endFunction
 endProperty
 
+Perk Property ConcentratedPoison  Auto
 
 Perk Property _KLV_StashRefPerk  Auto
 Sound Property _PSX_PoisonUse Auto
@@ -179,6 +180,9 @@ Function Maintenance()
 	KeycodePoisonRght = _PSX_KeycodePoisonRght.GetValue() as int
 	ChargesPerPoisonVial = _PSX_ChargesPerPoisonVial.GetValue() as int
 	ChargeMultiplier = _PSX_ChargeMultiplier.GetValue() as int
+	if (ChargeMultiplier == 1)
+		ChargeMultiplier = GetDefaultChargeMultiplier()
+	endIf
 	ShowWidgets = _PSX_ShowWidgets.GetValue() as bool
 	DebugToFile = _PSX_DebugToFile.GetValue() as bool
 
@@ -522,6 +526,13 @@ function UpdatePoisonWidget(int aiHand)
 
 endFunction
 
+
+int function GetDefaultChargeMultiplier()
+	if (PlayerRef.HasPerk(ConcentratedPoison))
+		return 2
+	endIf
+	return 1
+endFunction
 
 string function GetHandName(int aiHand)
 	if (aiHand == 0)

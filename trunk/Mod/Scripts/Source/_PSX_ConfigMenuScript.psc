@@ -33,17 +33,20 @@ string C_MENU_OPTION_BENEFICIAL = "$PSXMenuOptionBeneficial"
 string C_MENU_OPTION_NEVER = "$PSXMenuOptionNever"
 string C_HEADER_LABEL_PROMPTS = "$PSXHeaderLabelPrompts"
 string C_HEADER_LABEL_WIDGETS = "$PSXHeaderLabelWidgets"
+string C_HEADER_LABEL_MISC = "$PSXHeaderLabelMisc"
 string C_OPTION_LABEL_POISONPROMPT = "$PSXOptionLabelPoisonPrompt"
 string C_OPTION_LABEL_CLEANPROMPT = "$PSXOptionLabelCleanPrompt"
 string C_OPTION_LABEL_HOTKEYLEFT = "$PSXOptionLabelHotkeyLeft"
 string C_OPTION_LABEL_HOTKEYRGHT = "$PSXOptionLabelHotkeyRght"
+string C_OPTION_LABEL_CHARGEMULTIPLIER = "$PSXOptionLabelChargeMultiplier"
 string C_OPTION_LABEL_SHOWWIDGETS = "$PSXOptionLabelShowWidgets"
 string C_OPTION_LABEL_DEBUG = "$PSXOptionLabelDebug"
 string C_OPTION_LABEL_CURRENT_VERSION = "$PSXOptionLabelCurrentVersion"
 string C_INFO_TEXT_POISONPROMPT = "$PSXInfoTextPoisonPrompt"
 string C_INFO_TEXT_CLEANPROMPT = "$PSXInfoTextCleanPrompt"
-string C_INFO_TEXT_POISONLEFT = "$PSXInfoTextPoisonLeft"
-string C_INFO_TEXT_POISONRGHT = "$PSXInfoTextPoisonRght"
+string C_INFO_TEXT_HOTKEYLEFT = "$PSXInfoTextPoisonLeft"
+string C_INFO_TEXT_HOTKEYRGHT = "$PSXInfoTextPoisonRght"
+string C_INFO_TEXT_CHARGEMULTIPLIER = "$PSXInfoTextChargeMultiplier"
 string C_INFO_TEXT_SHOWWIDGETS = "$PSXInfoTextShowWidgets"
 string C_INFO_TEXT_DEBUG = "$PSXInfoTextDebug"
 
@@ -56,6 +59,8 @@ int hotkeyLeft
 int hotkeyLeftDefault
 int hotkeyRght
 int hotkeyRghtDefault
+int chargeMultiplier
+int chargeMultiplierDefault
 bool showWidgets
 bool showWidgetsDefault
 bool modDebug
@@ -86,19 +91,20 @@ event OnConfigInit()
 	Pages[0] = C_PAGE_MISC
 	
 	poisonPromptOptions = new string[4]
-	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_ALWAYS] = C_MENU_OPTION_ALWAYS
-	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_NEWPOISON] = C_MENU_OPTION_NEW_POISON
 	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_BENEFICIAL] = C_MENU_OPTION_BENEFICIAL
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_NEWPOISON] = C_MENU_OPTION_NEW_POISON
 	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_NEVER] = C_MENU_OPTION_NEVER
+	poisonPromptOptions[PSXQuest.C_CONFIRM_POISON_ALWAYS] = C_MENU_OPTION_ALWAYS
 	
 	cleanPromptOptions = new string[2]
-	cleanPromptOptions[PSXQuest.C_CONFIRM_CLEAN_ALWAYS] = C_MENU_OPTION_ALWAYS
 	cleanPromptOptions[PSXQuest.C_CONFIRM_CLEAN_NEVER] = C_MENU_OPTION_NEVER
+	cleanPromptOptions[PSXQuest.C_CONFIRM_CLEAN_ALWAYS] = C_MENU_OPTION_ALWAYS
 	
 	poisonPromptDefault = PSXQuest.C_CONFIRM_POISON_NEWPOISON
 	cleanPromptDefault = PSXQuest.C_CONFIRM_CLEAN_NEVER
 	hotkeyLeftDefault = -1
 	hotkeyRghtDefault = -1
+	chargeMultiplierDefault = PSXQuest.GetDefaultChargeMultiplier()
 	showWidgetsDefault = true
 	modDebugDefault = false
 	
@@ -113,6 +119,7 @@ Event OnConfigOpen()
 	cleanPrompt = PSXQuest.ConfirmClean
 	hotkeyLeft = PSXQuest.KeycodePoisonLeft
 	hotkeyRght = PSXQuest.KeycodePoisonRght
+	chargeMultiplier = PSXQuest.ChargeMultiplier
 	showWidgets = PSXQuest.ShowWidgets
 	modDebug = PSXQuest.DebugToFile
 
@@ -146,7 +153,15 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		
+		AddHeaderOption(C_HEADER_LABEL_MISC)
+		
+		AddSliderOptionST("ChargeMultiplier_S", C_OPTION_LABEL_CHARGEMULTIPLIER, chargeMultiplier)
 		AddToggleOptionST("Debug_B", C_OPTION_LABEL_DEBUG, modDebug)
+		
+		AddEmptyOption()
+		AddEmptyOption()
+		AddEmptyOption()
+
 		AddTextOptionST("CurrentVersion_T", C_OPTION_LABEL_CURRENT_VERSION, PSXQuest.GetVersionAsString(PSXQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
 		SetCursorPosition(1) ; Move to the top of the right-hand pane
@@ -230,7 +245,7 @@ state HotkeyLeft_K
 	endEvent
 	
 	event OnHighlightST()
-		
+		SetInfoText(C_INFO_TEXT_HOTKEYLEFT)
 	endEvent
 
 endState
@@ -253,7 +268,34 @@ state HotkeyRght_K
 	endEvent
 	
 	event OnHighlightST()
-		
+		SetInfoText(C_INFO_TEXT_HOTKEYRGHT)
+	endEvent
+
+endState
+
+state ChargeMultiplier_S
+
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(chargeMultiplier)
+		SetSliderDialogDefaultValue(chargeMultiplier)
+		SetSliderDialogRange(0, 10)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float a_val)
+		chargeMultiplier = a_val as int
+		SetSliderOptionValueST(chargeMultiplier)
+		PSXQuest.ChargeMultiplier = chargeMultiplier
+	endEvent
+
+	event OnDefaultST()
+		chargeMultiplier = chargeMultiplierDefault
+		SetSliderOptionValueST(chargeMultiplier)
+		PSXQuest.ChargeMultiplier = chargeMultiplier
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText(C_INFO_TEXT_CHARGEMULTIPLIER)
 	endEvent
 
 endState
