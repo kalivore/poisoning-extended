@@ -188,6 +188,7 @@ Function Maintenance()
 
 	RegisterForMenu("InventoryMenu")
 	RegisterForMenu("ContainerMenu")
+	RegisterForMenu("FavoritesMenu")
 
 	RegisterForModEvent("_KLV_ContainerActivated", "OnContainerActivated")
 
@@ -224,9 +225,9 @@ event OnMenuOpen(string a_MenuName)
 
 	currentMenu = a_MenuName
 	string msg = "Opened " + currentMenu
-	if (currentMenu == "InventoryMenu")
+	if (currentMenu == "InventoryMenu" || currentMenu == "FavoritesMenu")
 		WornObjectSubject = PlayerRef
-	else
+	elseIf (currentMenu == "ContainerMenu")
 		; sometimes the container opens before the activate script has run
 		; give the script 50ms to settle
 		int i = 50
@@ -262,7 +263,11 @@ event OnMenuOpen(string a_MenuName)
 	args[1] = "5"
 
 	UI.InvokeStringA(currentMenu, "_root.createEmptyMovieClip", args)
-	UI.InvokeString(currentMenu, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
+	if (currentMenu == "FavoritesMenu")
+		UI.InvokeString(currentMenu, "_root.poisonMonitorContainer.loadMovie", "PoisonFavMenuMonitor.swf")
+	else
+		UI.InvokeString(currentMenu, "_root.poisonMonitorContainer.loadMovie", "PoisonMonitor.swf")
+	endIf
 
 	handlingKeypress = false
 	RegisterForKey(KeycodePoisonLeft) ; direct LH poison
@@ -313,6 +318,8 @@ event OnItemSelectionChange(string asEventName, string asStrArg, float afNumArg,
 	endIf
 	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", msg)
 
+	; DebugStuff("OnItemSelectionChange (" + currentMenu + ") - item " + asStrArg + " in slot " + currentEquipSlot + " is " + akSender.GetName() + ", has " + msg)
+	
 endEvent
 
 event OnKeyDown(int aiKeyCode)
@@ -336,7 +343,11 @@ event OnKeyDown(int aiKeyCode)
 	endIf
 
 	if (aiKeyCode == KeycodePoisonLeft || aiKeyCode == KeycodePoisonRght)
-		UI.InvokeInt(currentMenu, "_global.Main.poisonMonitor.getCurrentForm", aiKeyCode)
+		if (currentMenu == "FavoritesMenu")
+			UI.InvokeInt(currentMenu, "_global.Main.poisonFavMenuMonitor.getCurrentForm", aiKeyCode)
+		else
+			UI.InvokeInt(currentMenu, "_global.Main.poisonMonitor.getCurrentForm", aiKeyCode)
+		endIf
 	else
 		handlingKeypress = false
 	endIf
@@ -451,7 +462,13 @@ endFunction
 
 Function RemovePoison(Weapon akWeapon)
 
-	int currentEquipSlot = UI.GetInt(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.equipState")
+	int currentEquipSlot = 0
+	if (currentMenu == "FavoritesMenu")
+		currentEquipSlot = UI.GetInt(currentMenu, "_root.MenuHolder.Menu_mc.itemList.selectedEntry.equipState")
+	else
+		currentEquipSlot = UI.GetInt(currentMenu, "_root.Menu_mc.inventoryLists.panelContainer.itemList.selectedEntry.equipState")
+	endIf
+
 	if (currentEquipSlot < 2)
 		return
 	endIf
@@ -480,14 +497,16 @@ Function RemovePoison(Weapon akWeapon)
 	int currentCharges = _Q2C_Functions.WornGetPoisonCharges(WornObjectSubject, currentEquipSlot)
 	_Q2C_Functions.WornRemovePoison(WornObjectSubject, currentEquipSlot)
 	_PSX_PoisonRemove.Play(playerRef)
-	; clear poison indicators on ItemCard
-	UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", "")
-	UI.InvokeString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", "Off")
-	; No point doing it in ListEntry, as that is only refreshed when state changes
-	; could try to run requestInvalidate to rebuild everything..?
-	UI.Invoke(currentMenu, "_root.Menu_mc.inventoryLists.itemList.requestInvalidate")
-	UI.Invoke(currentMenu, "_root.Menu_mc.inventoryLists.InvalidateListData")
 
+	if (currentMenu != "FavoritesMenu")
+		; clear poison indicators on ItemCard
+		UI.SetString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance._poisonData.text", "")
+		UI.InvokeString(currentMenu, "_root.Menu_mc.itemCard.PoisonInstance.gotoAndStop", "Off")
+		; No point doing it in ListEntry, as that is only refreshed when state changes
+		; could try to run requestInvalidate to rebuild everything..?
+		UI.Invoke(currentMenu, "_root.Menu_mc.inventoryLists.itemList.requestInvalidate")
+		UI.Invoke(currentMenu, "_root.Menu_mc.inventoryLists.InvalidateListData")
+	endIf
 
 	string wpnName = akWeapon.GetName()
 	string psnName = currentPoison.GetName()
