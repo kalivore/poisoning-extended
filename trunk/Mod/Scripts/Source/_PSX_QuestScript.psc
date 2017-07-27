@@ -1,6 +1,6 @@
 Scriptname _PSX_QuestScript extends Quest  
 
-float Property CurrentVersion = 0.0100 AutoReadonly
+float Property CurrentVersion = 1.0000 AutoReadonly
 float previousVersion
 
 string Property ModName = "Poisoning Extended" AutoReadonly

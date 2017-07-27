@@ -3,11 +3,11 @@ An attempt to improve and extend the poisoning experience in Skyrim, giving you 
 Once installed and running, you can highlight a poison in your inventory, and use hotkeys (B and N, by default) to immediately apply it to your right-hand [i]or left-hand[/i] weapon.  Once done, SkyUI wil show you what poison is applied - and there are even widgets on the HUD so you don't have to open the menu :)
 
 [line]
-[center][font=Courier New][color=#ff0000][size=4][b]- [ CURRENTLY IN BETA ] -[/b][/size][/color]
+[center][font=Courier New][color=#ff0000][size=4][b]- (: [ OUT IN BETA ] :) -[/b][/size][/color]
 
-[color=#dd0000]Please note, this is a first release, and while it's been stable and fine on my system, like all my mods I consider the first release a beta.  It is feature-complete (though there is still more I would like to do), but I'd really like some more feedback from a wider user base.
+[color=#dd0000]Well, this has been available for a while, and there's no reports of anyone's computer catching fire as a result of installing it, so I'm going to count this as a first full release.
 
-This mod may therefore change significantly before final v1.0 release - as such, please [b]ONLY[/b] install it on a savegame you are happy to revert if necessary, and make (and keep!) a backup of your save before installing this.[/color][/font][/center]
+As such, However (as ever!) please make (and keep!) a backup of your save before installing this, just in case..[/color][/font][/center]
 [line]
 
 
@@ -33,6 +33,11 @@ Another annoyance in vanilla was that I couldn't [i]remove[/i] a poison once it 
 This happened completely by accident, but I decided to leave it in..  Since the mod simply attempts to coat your weapon with [i]whatever[/i] Alchemy item is highlighted, it's now actually possible to apply restorative potions to weapons!  Why on earth would you want to?  Well, I'm not sure you would, most of the time - but in that one circumstance where your friendly Mage follower is far far away and flat out of Magicka, you might appreciate being able to dose up your bow with a strong Magicka potion, and use the least-damaging arrow you've got to make a really, [i]really[/i] crude sort of long-range hypodermic delivery mechanism..
 
 I'm not saying it's always a good idea, but it was too much potential fun for me [i]not[/i] to leave it in.
+
+[font=Georgia][color=#8e7cc3][size=3][b]In v1.0 release - poison/clean weapons from the Favourites menu![/b][/size][/color][/font]
+
+Following a request, I'm happy to say I've beena ble to figure out how to get this working from the Favourites menu! :)  This uses the same approach and hotkeys as in the main Inventory menu - so highlight a (favourited) poison and press a hotkey to apply it, or highlight a weapon and press a key to clean it.  Big thanks to [url=http://www.nexusmods.com/skyrim/users/6639150]Guraka22[/url] for the suggestion.
+
 
 
 
