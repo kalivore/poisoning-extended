@@ -3,7 +3,7 @@ An attempt to improve and extend the poisoning experience in Skyrim, giving you 
 Once installed and running, you can highlight a poison in your inventory, and use hotkeys (B and N, by default) to immediately apply it to your right-hand [i]or left-hand[/i] weapon.  Once done, SkyUI wil show you what poison is applied - and there are even widgets on the HUD so you don't have to open the menu :)
 
 [line]
-[center][font=Courier New][color=#ff0000][size=4][b]- (: [ OUT IN BETA ] :) -[/b][/size][/color]
+[center][font=Courier New][color=#ff0000][size=4][b]- (: [ OUT OF BETA ] :) -[/b][/size][/color]
 
 [color=#dd0000]Well, this has been available for a while, and there's no reports of anyone's computer catching fire as a result of installing it, so I'm going to count this as a first full release.
 

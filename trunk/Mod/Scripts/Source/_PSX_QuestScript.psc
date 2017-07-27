@@ -229,10 +229,10 @@ event OnMenuOpen(string a_MenuName)
 		WornObjectSubject = PlayerRef
 	elseIf (currentMenu == "ContainerMenu")
 		; sometimes the container opens before the activate script has run
-		; give the script 50ms to settle
-		int i = 50
+		; give the script 1s to settle
+		int i = 10
 		while (!TargetRef && i)
-			Utility.WaitMenuMode(1)
+			Utility.WaitMenuMode(0.1)
 			i -= 1
 		endWhile
 	
