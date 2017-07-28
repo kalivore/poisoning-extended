@@ -1,0 +1,11 @@
+Version 1.00.00
+
+First full release 
+
+Poisoning is now possible from the Favourites menu
+
+
+
+Version 0.01.00
+
+Initial release
