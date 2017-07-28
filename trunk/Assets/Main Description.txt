@@ -16,7 +16,7 @@ As such, However (as ever!) please make (and keep!) a backup of your save before
 
 Something that really bugs me in the vanilla game is that, once a poison is applied, that's it.  You can see your weapon is poisoned, but not [i]what with[/i] - and there are several times I've found myself wondering what on earth is going to happen when I whack an enemy with my mystery-poisoned sword..
 
-With this mod, any [b]equipped[/b] poisoned weapons will show their poison on the Item Card in the SkyUI inventory screen (the one on the right, with the image).  I've positioned it next to the rather nice snake icon which indicates poison, and done my best to make it a useful size.  This works for NPCs too!  As long as their weapon is equipped, going into their inventory will show what venemous nastiness they've got on their blade.
+With this mod, any [b]equipped[/b] poisoned weapons will show their poison on the Item Card in the SkyUI inventory screen (the one on the right, with the image).  I've positioned it next to the rather nice snake icon which indicates poison, and done my best to make it a useful size.  This works for NPCs too!  As long as their weapon is equipped, going into their inventory will show what venomous nastiness they've got on their blade.
 
 I've also included widgets for the HUD, so you can see at a glance what your current weapon is poisoned with, and how much poison is left on it.  Speaking of which..
 
@@ -36,7 +36,7 @@ I'm not saying it's always a good idea, but it was too much potential fun for me
 
 [font=Georgia][color=#8e7cc3][size=3][b]In v1.0 release - poison/clean weapons from the Favourites menu![/b][/size][/color][/font]
 
-Following a request, I'm happy to say I've beena ble to figure out how to get this working from the Favourites menu! :)  This uses the same approach and hotkeys as in the main Inventory menu - so highlight a (favourited) poison and press a hotkey to apply it, or highlight a weapon and press a key to clean it.  Big thanks to [url=http://www.nexusmods.com/skyrim/users/6639150]Guraka22[/url] for the suggestion.
+Following a request, I'm happy to say I've been able to figure out how to get this working from the Favourites menu! :)  This uses the same approach and hotkeys as in the main Inventory menu - so highlight a (favourited) poison and press a hotkey to apply it, or highlight a weapon and press a key to clean it.  Big thanks to [url=http://www.nexusmods.com/skyrim/users/6639150]Guraka22[/url] for the suggestion.
 
 
 
@@ -44,7 +44,7 @@ Following a request, I'm happy to say I've beena ble to figure out how to get th
 [font=Georgia][size=5][b][center][color=#44ff44]Compatibility[/color][/center][/b][/size][/font]
 There should be no direct conflicts, as no vanilla records were harmed in the making of this mod ;)
 
-However, be aware this is compltely separate from the existing poisoning system.  As in, left-clicking a poison will still prompt you to add it to your main-hand weapon, just like normal.  All of this mod's functionality is done via the hotkeys.
+However, be aware this is completely separate from the existing poisoning system.  As in, left-clicking a poison will still prompt you to add it to your main-hand weapon, just like normal.  All of this mod's functionality is done via the hotkeys.
 
 Also, and as a result of it being separate, any mods which alter your poison dose count via perks - most commonly by overriding the "Concentrated Poison" perk to give you more than 2 doses, for example - will [b]not[/b] be automatically reflected by this mod.  There is a manual option though - in the MCM, you can set a multiplier for poison dosage, so if you do have such a mod, just set the MCM slider to match.
 
