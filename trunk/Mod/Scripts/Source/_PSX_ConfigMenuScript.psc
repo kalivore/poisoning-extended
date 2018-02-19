@@ -5,9 +5,10 @@ ScriptName _PSX_ConfigMenuScript extends SKI_ConfigBase
 ; History
 ;
 ; 1 - Initial version
+; 2 - Bumped max Charge Multiplier val to 25
 
 int function GetVersion()
-	return 1
+	return 2
 endFunction
 
 
@@ -278,7 +279,7 @@ state ChargeMultiplier_S
 	event OnSliderOpenST()
 		SetSliderDialogStartValue(chargeMultiplier)
 		SetSliderDialogDefaultValue(chargeMultiplier)
-		SetSliderDialogRange(0, 10)
+		SetSliderDialogRange(0, 25)
 		SetSliderDialogInterval(1)
 	endEvent
 
