@@ -375,7 +375,7 @@ event OnRequestedFormSent(string asEventName, string asStrArg, float afNumArg, F
 	endIf
 
 	Potion toUse = akSender as Potion
-	if (!toUse && akSender.GetFormID() == -16775168)
+	if (!toUse && Math.RightShift(akSender.GetFormID(), 24) >= 255)
 		if (lastUsedLeft && pressedKey == KeycodePoisonLeft && WornObjectSubject.GetItemCount(lastUsedLeft) > 0)
 			toUse = lastUsedLeft
 		elseIf (lastUsedRght && pressedKey == KeycodePoisonRght && WornObjectSubject.GetItemCount(lastUsedRght) > 0)

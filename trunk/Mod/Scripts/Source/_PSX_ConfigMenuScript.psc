@@ -161,7 +161,6 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		AddEmptyOption()
-		AddEmptyOption()
 
 		AddTextOptionST("CurrentVersion_T", C_OPTION_LABEL_CURRENT_VERSION, PSXQuest.GetVersionAsString(PSXQuest.CurrentVersion), OPTION_FLAG_DISABLED)
 		
