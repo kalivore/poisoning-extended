@@ -1,6 +1,14 @@
+Version 1.01.00
+
+On-screen widgets should update when equipping/unequipping weapons (eg using SkyUI hotkeys)
+
+Better handling of the situation where the mod cannot identify the opened container (this definitely happens with Ash Piles/Ghostly remains - there may be others).  Now, instead of throwing a message and abandoning all functions, it should continue to work for items in the player's inventory.
+
+
 Version 1.00.01
 
 Bumped max Charge Multiplier val to 25
+
 Added a workaround for the mod not recognising player-created poisons/potions after the first hotkey press
 
 
@@ -9,7 +17,6 @@ Version 1.00.00
 First full release 
 
 Poisoning is now possible from the Favourites menu
-
 
 
 Version 0.01.00
